@@ -1,0 +1,320 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../models/savings_goal.dart';
+import '../providers/salary_provider.dart';
+import '../widgets/add_goal_modal.dart';
+import '../widgets/add_transaction_modal.dart';
+import '../widgets/budget_progress_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/transaction_tile.dart';
+
+class DashboardTab extends StatelessWidget {
+  final Function(int) onNavigateTab;
+
+  const DashboardTab({super.key, required this.onNavigateTab});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = Provider.of<SalaryProvider>(context);
+    final currency = provider.currency;
+    final formatter = NumberFormat.currency(
+      symbol: currency,
+      decimalDigits: 0,
+      locale: 'fr_FR',
+    );
+
+    final recentExpenses = provider.currentMonthExpenses;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Header Card (Balance, Salary & Expenses)
+          const SummaryCard(),
+          const SizedBox(height: 20),
+
+          // 2. Quick Action Bar
+          Row(
+            children: [
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.add_circle_outline,
+                  label: 'Ajouter',
+                  color: const Color(0xFF10B981),
+                  onTap: () => AddTransactionModal.show(context),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.savings_outlined,
+                  label: '+ Objectif',
+                  color: const Color(0xFF3B82F6),
+                  onTap: () => AddGoalModal.show(context),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.bar_chart,
+                  label: 'Analyses',
+                  color: const Color(0xFF8B5CF6),
+                  onTap: () => onNavigateTab(3), // Navigate to Analytics Tab
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // 3. 50/30/20 Budget Gauge Section
+          const BudgetProgressBarSection(),
+          const SizedBox(height: 24),
+
+          // 4. Savings Goals Section
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Objectifs d\'Épargne',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton(
+                onPressed: () => onNavigateTab(2), // Navigate to Goals Tab
+                child: const Text('Voir tout'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (provider.savingsGoals.isEmpty)
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Center(
+                  child: Text(
+                    'Aucun objectif défini. Cliquez sur + Objectif pour commencer !',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              height: 130,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: provider.savingsGoals.length,
+                itemBuilder: (context, index) {
+                  final goal = provider.savingsGoals[index];
+                  return _GoalMiniCard(
+                    goal: goal,
+                    currency: currency,
+                    formatter: formatter,
+                  );
+                },
+              ),
+            ),
+          const SizedBox(height: 24),
+
+          // 5. Recent Transactions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Dépenses Récentes',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton(
+                onPressed: () => onNavigateTab(1), // Navigate to Expenses Tab
+                child: const Text('Voir tout'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (recentExpenses.isEmpty)
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Center(
+                  child: Text(
+                    'Aucune dépense enregistrée ce mois-ci.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: recentExpenses.length > 5 ? 5 : recentExpenses.length,
+              itemBuilder: (context, index) {
+                final expense = recentExpenses[index];
+                return ExpenseTile(
+                  expense: expense,
+                  currency: currency,
+                  onDelete: () => provider.deleteExpense(expense.id),
+                );
+              },
+            ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Ink(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GoalMiniCard extends StatelessWidget {
+  final SavingsGoal goal;
+  final String currency;
+  final NumberFormat formatter;
+
+  const _GoalMiniCard({
+    required this.goal,
+    required this.currency,
+    required this.formatter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Color(goal.colorHex);
+    final percent = (goal.progressPercentage * 100).toInt();
+
+    return Container(
+      width: 170,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  goal.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$percent%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${formatter.format(goal.currentAmount)} / ${formatter.format(goal.targetAmount)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: goal.progressPercentage,
+                  backgroundColor: Colors.white,
+                  color: color,
+                  minHeight: 6,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
