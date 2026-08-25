@@ -50,4 +50,5 @@ Vous conservez le contrôle total sur vos données :
 Pour toute question concernant cette politique de confidentialité ou l'application **Mon Salaire & Budget**, vous pouvez nous contacter :
 
 - **Éditeur / Développeur** : GRIMM (devherz)
+- **Adresse E-mail** : grimm.rabbitry@gmail.com
 - **Dépôt du projet** : [https://github.com/devherz/my_salary](https://github.com/devherz/my_salary)
