@@ -229,19 +229,28 @@ class _GoalsTabState extends State<GoalsTab> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      if (goal.targetDate != null) ...[
-                                        const SizedBox(height: 2),
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.event, size: 13, color: Colors.grey),
-                                            const SizedBox(width: 4),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          if (goal.startDate != null) ...[
+                                            const Icon(Icons.play_circle_outline, size: 12, color: Colors.blue),
+                                            const SizedBox(width: 3),
                                             Text(
-                                              'Échéance : ${DateFormat('dd/MM/yyyy', 'fr_FR').format(goal.targetDate!)}',
+                                              'Début : ${DateFormat('dd/MM/yy', 'fr_FR').format(goal.startDate!)}',
+                                              style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                            ),
+                                            const SizedBox(width: 8),
+                                          ],
+                                          if (goal.targetDate != null) ...[
+                                            const Icon(Icons.event, size: 12, color: Color(0xFF10B981)),
+                                            const SizedBox(width: 3),
+                                            Text(
+                                              'Échéance : ${DateFormat('dd/MM/yy', 'fr_FR').format(goal.targetDate!)}',
                                               style: const TextStyle(fontSize: 11, color: Colors.grey),
                                             ),
                                           ],
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -252,7 +261,32 @@ class _GoalsTabState extends State<GoalsTab> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 12),
+                          if (goal.calculatedMonthlyTarget > 0) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.calendar_month, size: 14, color: color),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Épargne conseillée : ${formatter.format(goal.calculatedMonthlyTarget)} / mois',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [

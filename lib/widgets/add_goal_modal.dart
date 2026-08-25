@@ -25,7 +25,9 @@ class _AddGoalModalState extends State<AddGoalModal> {
   final _titleController = TextEditingController();
   final _targetAmountController = TextEditingController();
   final _currentAmountController = TextEditingController();
+  final _monthlyAmountController = TextEditingController();
 
+  DateTime? _startDate = DateTime.now();
   DateTime? _targetDate;
   int _selectedColor = 0xFF10B981; // Default Emerald
 
@@ -43,6 +45,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
     _titleController.dispose();
     _targetAmountController.dispose();
     _currentAmountController.dispose();
+    _monthlyAmountController.dispose();
     super.dispose();
   }
 
@@ -52,13 +55,16 @@ class _AddGoalModalState extends State<AddGoalModal> {
     final provider = Provider.of<SalaryProvider>(context, listen: false);
     final target = double.tryParse(_targetAmountController.text.replaceAll(',', '.')) ?? 0.0;
     final current = double.tryParse(_currentAmountController.text.replaceAll(',', '.')) ?? 0.0;
+    final monthly = double.tryParse(_monthlyAmountController.text.replaceAll(',', '.'));
 
     final goal = SavingsGoal(
       id: 'goal_${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
       targetAmount: target,
       currentAmount: current,
+      startDate: _startDate,
       targetDate: _targetDate,
+      monthlyAmount: monthly,
       colorHex: _selectedColor,
     );
 
@@ -104,6 +110,8 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+
+              // Title
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
@@ -115,11 +123,13 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 validator: (val) => val == null || val.trim().isEmpty ? 'Veuillez entrer un titre' : null,
               ),
               const SizedBox(height: 16),
+
+              // Target Total Amount
               TextFormField(
                 controller: _targetAmountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Montant Cible (${provider.currency})',
+                  labelText: 'Montant Cible Total (${provider.currency})',
                   hintText: 'ex: 3000',
                   prefixIcon: const Icon(Icons.flag),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -132,6 +142,21 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 },
               ),
               const SizedBox(height: 16),
+
+              // Monthly Amount
+              TextFormField(
+                controller: _monthlyAmountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Montant Mensuel à Épargner (${provider.currency}/mois) - Optionnel',
+                  hintText: 'ex: 200.00',
+                  prefixIcon: const Icon(Icons.calendar_month),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Current Saved Amount
               TextFormField(
                 controller: _currentAmountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -143,7 +168,60 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Target Date Selector (Optionnel)
+
+              // Start Date Picker
+              InkWell(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _startDate ?? DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2035),
+                    helpText: 'Date de début de l\'épargne',
+                    cancelText: 'Annuler',
+                    confirmText: 'Choisir',
+                  );
+                  if (picked != null) {
+                    setState(() => _startDate = picked);
+                  }
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.play_circle_outline, color: Color(0xFF3B82F6)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Date de début de l\'épargne',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _startDate == null
+                                  ? 'Aujourd\'hui'
+                                  : DateFormat('dd MMMM yyyy', 'fr_FR').format(_startDate!),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: Colors.grey),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Target Date Picker (Optionnel)
               InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -151,7 +229,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
                     initialDate: _targetDate ?? DateTime.now().add(const Duration(days: 90)),
                     firstDate: DateTime.now(),
                     lastDate: DateTime(2035),
-                    helpText: 'Date limite d\'épargne',
+                    helpText: 'Date d\'échéance de l\'épargne',
                     cancelText: 'Annuler',
                     confirmText: 'Choisir',
                   );
@@ -175,7 +253,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Date limite d\'échéance (Optionnelle)',
+                              'Date d\'échéance (Optionnelle)',
                               style: TextStyle(fontSize: 12, color: Colors.grey),
                             ),
                             const SizedBox(height: 2),
@@ -203,6 +281,8 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              // Color Selector
               const Text(
                 'Couleur de l\'objectif',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
@@ -225,6 +305,8 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 }).toList(),
               ),
               const SizedBox(height: 24),
+
+              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 52,
