@@ -3,6 +3,7 @@ import '../models/budget_rule.dart';
 import '../models/expense.dart';
 import '../models/income.dart';
 import '../models/savings_goal.dart';
+import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 
 class SalaryProvider extends ChangeNotifier {
@@ -22,6 +23,7 @@ class SalaryProvider extends ChangeNotifier {
   String? _pinCode;
   String? _password;
   bool _isUnlocked = true;
+  bool _isMonthlyReminderEnabled = true;
 
   SalaryProvider(this.storage) {
     _loadFromStorage();
@@ -42,6 +44,7 @@ class SalaryProvider extends ChangeNotifier {
   String? get pinCode => _pinCode;
   String? get password => _password;
   bool get isUnlocked => _isUnlocked;
+  bool get isMonthlyReminderEnabled => _isMonthlyReminderEnabled;
 
   void _loadFromStorage() {
     _baseSalary = storage.getBaseSalary();
@@ -57,6 +60,18 @@ class SalaryProvider extends ChangeNotifier {
     _pinCode = storage.getPinCode();
     _password = storage.getPassword();
     _isUnlocked = !_isSecurityEnabled;
+    _isMonthlyReminderEnabled = storage.isMonthlyReminderEnabled();
+    notifyListeners();
+  }
+
+  Future<void> toggleMonthlyReminder(bool enabled) async {
+    _isMonthlyReminderEnabled = enabled;
+    await storage.saveMonthlyReminderEnabled(enabled);
+    if (enabled) {
+      await NotificationService().scheduleMonthly28thReminder();
+    } else {
+      await NotificationService().cancelReminder();
+    }
     notifyListeners();
   }
 

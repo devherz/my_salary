@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/budget_rule.dart';
 import '../providers/salary_provider.dart';
+import '../services/notification_service.dart';
 import 'password_lock_screen.dart';
 import 'pin_lock_screen.dart';
 
@@ -474,6 +475,46 @@ class _SettingsTabState extends State<SettingsTab> {
                   color: const Color(0xFFF59E0B),
                 ),
                 onChanged: (val) => provider.toggleDarkMode(val),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Notification Reminder Card (Rappel du 28 du mois)
+            Card(
+              elevation: 0.5,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Rappel du 28 du Mois', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Notification automatique chaque 28 du mois à 09:00 pour votre épargne et budget'),
+                      value: provider.isMonthlyReminderEnabled,
+                      secondary: const Icon(
+                        Icons.notifications_active,
+                        color: Color(0xFF10B981),
+                      ),
+                      onChanged: (val) => provider.toggleMonthlyReminder(val),
+                    ),
+                    if (provider.isMonthlyReminderEnabled) ...[
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.notification_add, color: Color(0xFF3B82F6)),
+                        title: const Text('Tester la notification de rappel'),
+                        subtitle: const Text('Déclencher immédiatement une notification de démonstration'),
+                        onTap: () async {
+                          await NotificationService().showTestNotification();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Notification de test envoyée !')),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),

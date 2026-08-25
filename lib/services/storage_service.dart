@@ -155,6 +155,16 @@ class StorageService {
     await prefs.setString(_keyPassword, password);
   }
 
+  static const String _keyMonthlyReminderEnabled = 'monthly_reminder_enabled';
+
+  bool isMonthlyReminderEnabled() {
+    return prefs.getBool(_keyMonthlyReminderEnabled) ?? true;
+  }
+
+  Future<void> saveMonthlyReminderEnabled(bool enabled) async {
+    await prefs.setBool(_keyMonthlyReminderEnabled, enabled);
+  }
+
   Future<void> clearAllData() async {
     await prefs.remove(_keyIncomes);
     await prefs.remove(_keyExpenses);

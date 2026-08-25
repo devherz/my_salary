@@ -4,11 +4,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'providers/salary_provider.dart';
 import 'screens/home_navigation_screen.dart';
+import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('fr_FR', null);
+  await NotificationService().init();
   final storage = await StorageService.init();
 
   runApp(
