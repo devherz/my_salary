@@ -9,7 +9,7 @@ import '../services/storage_service.dart';
 class SalaryProvider extends ChangeNotifier {
   final StorageService storage;
 
-  double _baseSalary = 2500.0;
+  double _baseSalary = 0.0;
   String _currency = '€';
   int _payDay = 1;
   BudgetRule _budgetRule = const BudgetRule();
@@ -84,6 +84,7 @@ class SalaryProvider extends ChangeNotifier {
   }
 
   Future<void> clearAllData() async {
+    _baseSalary = 0.0;
     _incomes.clear();
     _expenses.clear();
     _savingsGoals.clear();

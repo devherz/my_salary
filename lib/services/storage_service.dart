@@ -30,7 +30,7 @@ class StorageService {
 
   // Base Salary
   double getBaseSalary() {
-    return prefs.getDouble(_keyBaseSalary) ?? 2500.0; // Default sample salary
+    return prefs.getDouble(_keyBaseSalary) ?? 0.0; // Default 0.0
   }
 
   Future<void> saveBaseSalary(double salary) async {
@@ -166,6 +166,7 @@ class StorageService {
   }
 
   Future<void> clearAllData() async {
+    await prefs.remove(_keyBaseSalary);
     await prefs.remove(_keyIncomes);
     await prefs.remove(_keyExpenses);
     await prefs.remove(_keySavingsGoals);

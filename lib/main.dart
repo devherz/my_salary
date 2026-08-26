@@ -95,7 +95,7 @@ class SalaryManagerApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'Mon Salaire & Budget',
+      title: 'Salaire & Budget',
       debugShowCheckedModeBanner: false,
       themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: lightTheme,
