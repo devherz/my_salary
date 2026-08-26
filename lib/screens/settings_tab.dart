@@ -53,6 +53,209 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
+  void _showCustomRuleModal(BuildContext context, SalaryProvider provider) {
+    double needs = provider.budgetRule.needsPercent;
+    double wants = provider.budgetRule.wantsPercent;
+    double savings = provider.budgetRule.savingsPercent;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final total = needs + wants + savings;
+            final isValid = (total - 100.0).abs() < 0.1;
+            final baseSalary = provider.baseSalary;
+            final currency = provider.currency;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                top: 24.0,
+                left: 24.0,
+                right: 24.0,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Créer ma Règle sur-mesure ⚙️',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Ajustez les pourcentages selon votre choix (Total = 100%).',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Total Indicator Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isValid ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isValid ? const Color(0xFF10B981) : Colors.red,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Total des pourcentages :',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isValid ? const Color(0xFF10B981) : Colors.red,
+                          ),
+                        ),
+                        Text(
+                          '${total.toStringAsFixed(0)} %',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isValid ? const Color(0xFF10B981) : Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Needs Slider (Besoins)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '🏠 Besoins (${needs.toStringAsFixed(0)}%)',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${((needs / 100) * baseSalary).toStringAsFixed(0)} $currency',
+                        style: const TextStyle(color: Color(0xFF3B82F6), fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: needs,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    activeColor: const Color(0xFF3B82F6),
+                    label: '${needs.toStringAsFixed(0)}%',
+                    onChanged: (val) {
+                      setModalState(() {
+                        needs = val;
+                      });
+                    },
+                  ),
+
+                  // Wants Slider (Envies)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '🎯 Envies / Loisirs (${wants.toStringAsFixed(0)}%)',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${((wants / 100) * baseSalary).toStringAsFixed(0)} $currency',
+                        style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: wants,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    activeColor: const Color(0xFF8B5CF6),
+                    label: '${wants.toStringAsFixed(0)}%',
+                    onChanged: (val) {
+                      setModalState(() {
+                        wants = val;
+                      });
+                    },
+                  ),
+
+                  // Savings Slider (Épargne)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '💰 Épargne & Projets (${savings.toStringAsFixed(0)}%)',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${((savings / 100) * baseSalary).toStringAsFixed(0)} $currency',
+                        style: const TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: savings,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    activeColor: const Color(0xFF10B981),
+                    label: '${savings.toStringAsFixed(0)}%',
+                    onChanged: (val) {
+                      setModalState(() {
+                        savings = val;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isValid ? const Color(0xFF10B981) : Colors.grey,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: isValid
+                          ? () {
+                              _updateRule(provider, needs, wants, savings);
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Règle de budget personnalisée appliquée !')),
+                              );
+                            }
+                          : null,
+                      child: Text(
+                        isValid ? 'Enregistrer ma Règle' : 'Ajustez le total à 100%',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showSecurityChoiceModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -391,11 +594,30 @@ class _SettingsTabState extends State<SettingsTab> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        icon: const Icon(Icons.tune, size: 18),
+                        label: Text(
+                          'Créer ma règle sur-mesure (${provider.budgetRule.needsPercent.toInt()}/${provider.budgetRule.wantsPercent.toInt()}/${provider.budgetRule.savingsPercent.toInt()})',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        onPressed: () => _showCustomRuleModal(context, provider),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
-                      'Choisissez un modèle prédéfini de répartition de votre salaire :',
+                      'Ou choisir un modèle rapide :',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
