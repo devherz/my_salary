@@ -68,9 +68,17 @@ class SalaryProvider extends ChangeNotifier {
     _isMonthlyReminderEnabled = enabled;
     await storage.saveMonthlyReminderEnabled(enabled);
     if (enabled) {
-      await NotificationService().scheduleMonthly28thReminder();
+      try {
+        await NotificationService().scheduleMonthly28thReminder();
+      } catch (e) {
+        debugPrint('Error scheduling reminder: $e');
+      }
     } else {
-      await NotificationService().cancelReminder();
+      try {
+        await NotificationService().cancelReminder();
+      } catch (e) {
+        debugPrint('Error canceling reminder: $e');
+      }
     }
     notifyListeners();
   }

@@ -9,8 +9,18 @@ import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('fr_FR', null);
-  await NotificationService().init();
+  try {
+    await initializeDateFormatting('fr_FR', null);
+  } catch (e) {
+    debugPrint('DateFormatting init error: $e');
+  }
+
+  try {
+    await NotificationService().init();
+  } catch (e) {
+    debugPrint('NotificationService init error: $e');
+  }
+
   final storage = await StorageService.init();
 
   runApp(
