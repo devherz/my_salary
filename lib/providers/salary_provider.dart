@@ -346,6 +346,15 @@ class SalaryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateIncome(Income income) async {
+    final idx = _incomes.indexWhere((i) => i.id == income.id);
+    if (idx != -1) {
+      _incomes[idx] = income;
+      await storage.saveIncomes(_incomes);
+      notifyListeners();
+    }
+  }
+
   Future<void> deleteIncome(String id) async {
     _incomes.removeWhere((i) => i.id == id);
     await storage.saveIncomes(_incomes);
