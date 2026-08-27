@@ -126,7 +126,7 @@ class DashboardTab extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 145,
+              height: 160,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: provider.incomes.length,
@@ -140,132 +140,117 @@ class DashboardTab extends StatelessWidget {
                   final assignedGoalsCount = provider.savingsGoals.where((g) => g.incomeSourceId == inc.id).length;
                   final remaining = inc.amount - totalSpent;
 
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => IncomeSourceDetailsScreen(incomeId: inc.id),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 260,
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
+                  return Container(
+                    width: 265,
+                    margin: const EdgeInsets.only(right: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                          : Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
                         color: isSelected
-                            ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                            : Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFF10B981)
-                              : Colors.grey.withValues(alpha: 0.2),
-                          width: isSelected ? 2 : 1,
-                        ),
+                            ? const Color(0xFF10B981)
+                            : Colors.grey.withValues(alpha: 0.2),
+                        width: isSelected ? 2 : 1,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  inc.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  formatter.format(inc.amount),
-                                  style: const TextStyle(
-                                    color: Color(0xFF10B981),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.shopping_bag_outlined, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Dépenses: ${formatter.format(totalSpent)} (${assignedExpenses.length})',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.savings_outlined, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Objectifs: $assignedGoalsCount rattaché(s)',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Reste: ${formatter.format(remaining)}',
-                                style: TextStyle(
-                                  fontSize: 13,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                inc.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: remaining >= 0 ? const Color(0xFF10B981) : Colors.red,
+                                  fontSize: 15,
                                 ),
                               ),
-                              InkWell(
-                                onTap: () {
-                                  if (isSelected) {
-                                    provider.setSelectedIncomeSourceId(null);
-                                  } else {
-                                    provider.setSelectedIncomeSourceId(inc.id);
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? const Color(0xFF10B981) : Colors.grey.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    isSelected ? 'Filtre actif' : 'Filtrer',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSelected ? Colors.white : Colors.black87,
-                                    ),
-                                  ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                formatter.format(inc.amount),
+                                style: const TextStyle(
+                                  color: Color(0xFF10B981),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.shopping_bag_outlined, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Dépenses: ${formatter.format(totalSpent)} (${assignedExpenses.length})',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.savings_outlined, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Objectifs: $assignedGoalsCount rattaché(s)',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Reste: ${formatter.format(remaining)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: remaining >= 0 ? const Color(0xFF10B981) : Colors.red,
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.open_in_new, size: 12),
+                              label: const Text('Page dédiée', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => IncomeSourceDetailsScreen(incomeId: inc.id),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   );
                 },
