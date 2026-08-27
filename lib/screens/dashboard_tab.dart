@@ -106,158 +106,167 @@ class DashboardTab extends StatelessWidget {
           const BudgetProgressBarSection(),
           const SizedBox(height: 24),
 
-          // 3.5 Detailed Income Sources Overview Section
-          if (provider.incomes.isNotEmpty) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Mes Sources de Revenus (${provider.incomes.length})',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => AddTransactionModal.show(context),
-                  child: const Text('+ Ajouter'),
+          // 2.5 Central Income Pages Grid Hub
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.25), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 160,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: provider.incomes.length,
-                itemBuilder: (context, index) {
-                  final inc = provider.incomes[index];
-                  final isSelected = provider.selectedIncomeSourceId == inc.id;
-                  
-                  // Calculate expenses assigned to this specific income source
-                  final assignedExpenses = provider.expenses.where((e) => e.incomeSourceId == inc.id).toList();
-                  final totalSpent = assignedExpenses.fold<double>(0.0, (sum, e) => sum + e.amount);
-                  final assignedGoalsCount = provider.savingsGoals.where((g) => g.incomeSourceId == inc.id).length;
-                  final remaining = inc.amount - totalSpent;
-
-                  return Container(
-                    width: 265,
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.account_balance_wallet, color: Color(0xFF10B981), size: 22),
+                        SizedBox(width: 8),
+                        Text(
+                          'Écrans Dédiés des Revenus',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('+ Source'),
+                      onPressed: () => AddTransactionModal.show(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Cliquez sur une source pour ouvrir sa page dédiée (Dépenses, Objectifs, Actions) :',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 14),
+                if (provider.incomes.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                          : Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF10B981)
-                            : Colors.grey.withValues(alpha: 0.2),
-                        width: isSelected ? 2 : 1,
+                      color: Colors.grey.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Aucune source de revenu configurée. Cliquez sur + Source pour commencer !',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                inc.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
+                  )
+                else
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1.35,
+                    ),
+                    itemCount: provider.incomes.length,
+                    itemBuilder: (context, index) {
+                      final inc = provider.incomes[index];
+                      final assignedExpenses = provider.expenses.where((e) => e.incomeSourceId == inc.id).toList();
+                      final totalSpent = assignedExpenses.fold<double>(0.0, (sum, e) => sum + e.amount);
+                      final remaining = inc.amount - totalSpent;
+
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => IncomeSourceDetailsScreen(incomeId: inc.id),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(10),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF10B981).withValues(alpha: 0.08),
+                                const Color(0xFF3B82F6).withValues(alpha: 0.08),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      inc.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF10B981)),
+                                ],
                               ),
-                              child: Text(
+                              Text(
                                 formatter.format(inc.amount),
                                 style: const TextStyle(
                                   color: Color(0xFF10B981),
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 13,
+                                  fontSize: 15,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.shopping_bag_outlined, size: 14, color: Colors.grey),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Dépenses: ${formatter.format(totalSpent)} (${assignedExpenses.length})',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(Icons.savings_outlined, size: 14, color: Colors.grey),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Objectifs: $assignedGoalsCount rattaché(s)',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Reste: ${formatter.format(remaining)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: remaining >= 0 ? const Color(0xFF10B981) : Colors.red,
-                              ),
-                            ),
-                            ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF10B981),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              icon: const Icon(Icons.open_in_new, size: 12),
-                              label: const Text('Page dédiée', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => IncomeSourceDetailsScreen(incomeId: inc.id),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Reste: ${formatter.format(remaining)}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: remaining >= 0 ? const Color(0xFF10B981) : Colors.red,
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
-                          ],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      'Page dédiée',
+                                      style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
+              ],
             ),
-            const SizedBox(height: 20),
-          ],
+          ),
+          const SizedBox(height: 20),
 
           // 4. Savings Goals Section
           Row(
