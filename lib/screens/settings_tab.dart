@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/budget_rule.dart';
 import '../providers/salary_provider.dart';
 import '../services/notification_service.dart';
@@ -310,15 +315,17 @@ class _SettingsTabState extends State<SettingsTab> {
 
   void _showExportDialog(BuildContext context, SalaryProvider provider) {
     final jsonStr = provider.exportBackupData();
+    final nowStr = DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(DateTime.now());
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Row(
           children: [
-            Icon(Icons.cloud_upload, color: Color(0xFF10B981)),
+            Icon(Icons.shield_outlined, color: Color(0xFF10B981), size: 28),
             SizedBox(width: 10),
-            Text('Sauvegarde Locale'),
+            Text('Sauvegarde Pro', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
@@ -326,24 +333,67 @@ class _SettingsTabState extends State<SettingsTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Voici le code JSON de votre sauvegarde. Copiez-le pour le conserver en lieu sûr :',
-              style: TextStyle(fontSize: 13),
+              'Synthèse de votre portefeuille à sauvegarder :',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
+
+            // Summary Card
             Container(
-              height: 140,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
               ),
-              child: SingleChildScrollView(
-                child: SelectableText(
-                  jsonStr,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('📅 Date de la copie :', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(nowStr, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Divider(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('💰 Sources de Revenus :', style: TextStyle(fontSize: 13)),
+                      Text('${provider.incomes.length}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('💸 Dépenses enregistrées :', style: TextStyle(fontSize: 13)),
+                      Text('${provider.expenses.length}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('🎯 Objectifs d\'Épargne :', style: TextStyle(fontSize: 13)),
+                      Text('${provider.savingsGoals.length}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('⚙️ Règle de Répartition :', style: TextStyle(fontSize: 13)),
+                      Text('${provider.budgetRule.needsPercent.toInt()}/${provider.budgetRule.wantsPercent.toInt()}/${provider.budgetRule.savingsPercent.toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Exportez un fichier de sauvegarde (.json) réutilisable à tout moment sur n\'importe quel téléphone.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),
@@ -352,20 +402,45 @@ class _SettingsTabState extends State<SettingsTab> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Fermer'),
           ),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.copy, size: 16),
+            label: const Text('Copier JSON'),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: jsonStr));
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Code JSON de sauvegarde copié dans le presse-papier !')),
+              );
+            },
+          ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            icon: const Icon(Icons.copy, size: 18),
-            label: const Text('Copier la sauvegarde'),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: jsonStr));
+            icon: const Icon(Icons.share, size: 18),
+            label: const Text('Exporter Fichier'),
+            onPressed: () async {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sauvegarde copiée dans le presse-papier !')),
-              );
+              try {
+                final tempDir = await getTemporaryDirectory();
+                final fileName = 'Mon_Salaire_Sauvegarde_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.json';
+                final file = File('${tempDir.path}/$fileName');
+                await file.writeAsString(jsonStr);
+
+                await Share.shareXFiles(
+                  [XFile(file.path)],
+                  text: 'Sauvegarde Mon Salaire & Budget par GRIMM',
+                );
+              } catch (e) {
+                Clipboard.setData(ClipboardData(text: jsonStr));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Sauvegarde copiée au presse-papier !')),
+                  );
+                }
+              }
             },
           ),
         ],
@@ -375,72 +450,115 @@ class _SettingsTabState extends State<SettingsTab> {
 
   void _showImportDialog(BuildContext context, SalaryProvider provider) {
     final controller = TextEditingController();
+    String? validationMessage;
+    bool isValidJson = false;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.cloud_download, color: Color(0xFF3B82F6)),
-            SizedBox(width: 10),
-            Text('Restaurer une Sauvegarde'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Collez ci-dessous le code JSON de votre sauvegarde :',
-              style: TextStyle(fontSize: 13),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: const Row(
+              children: [
+                Icon(Icons.cloud_download, color: Color(0xFF3B82F6), size: 28),
+                SizedBox(width: 10),
+                Text('Restaurer une Sauvegarde', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              maxLines: 6,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-              decoration: InputDecoration(
-                hintText: '{\n  "version": 1,\n  "incomes": [...],\n  ...\n}',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Collez le code JSON de votre sauvegarde ci-dessous :',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    maxLines: 6,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    decoration: InputDecoration(
+                      hintText: '{\n  "version": 1,\n  "baseSalary": 2500,\n  ...\n}',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onChanged: (val) {
+                      setDialogState(() {
+                        if (val.trim().isEmpty) {
+                          validationMessage = null;
+                          isValidJson = false;
+                        } else {
+                          try {
+                            final parsed = jsonDecode(val.trim()) as Map<String, dynamic>;
+                            final incCount = (parsed['incomes'] as List?)?.length ?? 0;
+                            final expCount = (parsed['expenses'] as List?)?.length ?? 0;
+                            final goalCount = (parsed['savingsGoals'] as List?)?.length ?? 0;
+                            validationMessage = '✔ Sauvegarde Valide — $incCount Revenus, $expCount Dépenses, $goalCount Objectifs trouvés';
+                            isValidJson = true;
+                          } catch (_) {
+                            validationMessage = '❌ Format de sauvegarde invalide';
+                            isValidJson = false;
+                          }
+                        }
+                      });
+                    },
+                  ),
+                  if (validationMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isValidJson ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        validationMessage!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isValidJson ? const Color(0xFF10B981) : Colors.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B82F6),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () async {
-              final jsonStr = controller.text.trim();
-              if (jsonStr.isEmpty) return;
-
-              final success = await provider.importBackupData(jsonStr);
-              if (ctx.mounted) {
-                Navigator.pop(ctx);
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Données restaurées avec succès !')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Format de sauvegarde invalide.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Restaurer'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Annuler'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isValidJson ? const Color(0xFF3B82F6) : Colors.grey,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: isValidJson
+                    ? () async {
+                        final success = await provider.importBackupData(controller.text.trim());
+                        Navigator.pop(ctx);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? 'Portefeuille restauré avec succès !'
+                                    : 'Erreur lors de la restauration.',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    : null,
+                child: const Text('Restaurer mon portefeuille'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

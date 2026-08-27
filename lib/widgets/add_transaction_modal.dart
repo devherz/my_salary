@@ -33,6 +33,7 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
   String _selectedCategory = CategoryHelper.defaultCategories.first;
   BudgetCategoryType _selectedBudgetType = BudgetCategoryType.needs;
   DateTime _selectedDate = DateTime.now();
+  String? _selectedIncomeSourceId;
 
   @override
   void dispose() {
@@ -81,6 +82,7 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
         budgetType: _selectedBudgetType,
         date: _selectedDate,
         note: note,
+        incomeSourceId: _selectedIncomeSourceId,
       );
       provider.addExpense(expense);
     } else {
@@ -202,6 +204,30 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
               ),
               const SizedBox(height: 16),
               if (_isExpense) ...[
+                if (provider.incomes.isNotEmpty) ...[
+                  DropdownButtonFormField<String?>(
+                    value: _selectedIncomeSourceId,
+                    decoration: InputDecoration(
+                      labelText: 'Source de Revenu associée (Optionnel)',
+                      prefixIcon: const Icon(Icons.account_balance_wallet, color: Color(0xFF10B981)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('Toutes les sources (Global)'),
+                      ),
+                      ...provider.incomes.map((inc) {
+                        return DropdownMenuItem<String?>(
+                          value: inc.id,
+                          child: Text('${inc.title} (${inc.amount.toStringAsFixed(0)} ${provider.currency})'),
+                        );
+                      }),
+                    ],
+                    onChanged: (val) => setState(() => _selectedIncomeSourceId = val),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // Category Dropdown
                 DropdownButtonFormField<String>(
                   value: _selectedCategory,

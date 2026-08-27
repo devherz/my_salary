@@ -8,6 +8,7 @@ class Expense {
   final BudgetCategoryType budgetType;
   final DateTime date;
   final String? note;
+  final String? incomeSourceId;
 
   Expense({
     required this.id,
@@ -17,6 +18,7 @@ class Expense {
     required this.budgetType,
     required this.date,
     this.note,
+    this.incomeSourceId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -27,6 +29,7 @@ class Expense {
         'budgetType': budgetType.name,
         'date': date.toIso8601String(),
         'note': note,
+        'incomeSourceId': incomeSourceId,
       };
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -41,6 +44,7 @@ class Expense {
       ),
       date: DateTime.parse(json['date'] as String),
       note: json['note'] as String?,
+      incomeSourceId: json['incomeSourceId'] as String?,
     );
   }
 }

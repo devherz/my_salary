@@ -8,6 +8,7 @@ class SavingsGoal {
   final double? monthlyAmount;
   final int colorHex;
   final String iconName;
+  final String? incomeSourceId;
 
   SavingsGoal({
     required this.id,
@@ -19,6 +20,7 @@ class SavingsGoal {
     this.monthlyAmount,
     this.colorHex = 0xFF4CAF50, // Default emerald green
     this.iconName = 'savings',
+    this.incomeSourceId,
   });
 
   double get progressPercentage {
@@ -52,6 +54,7 @@ class SavingsGoal {
         'monthlyAmount': monthlyAmount,
         'colorHex': colorHex,
         'iconName': iconName,
+        'incomeSourceId': incomeSourceId,
       };
 
   factory SavingsGoal.fromJson(Map<String, dynamic> json) {
@@ -69,6 +72,7 @@ class SavingsGoal {
       monthlyAmount: (json['monthlyAmount'] as num?)?.toDouble(),
       colorHex: (json['colorHex'] as int?) ?? 0xFF4CAF50,
       iconName: (json['iconName'] as String?) ?? 'savings',
+      incomeSourceId: json['incomeSourceId'] as String?,
     );
   }
 
@@ -81,6 +85,7 @@ class SavingsGoal {
     double? monthlyAmount,
     int? colorHex,
     String? iconName,
+    String? incomeSourceId,
   }) {
     return SavingsGoal(
       id: id,
@@ -92,6 +97,7 @@ class SavingsGoal {
       monthlyAmount: monthlyAmount ?? this.monthlyAmount,
       colorHex: colorHex ?? this.colorHex,
       iconName: iconName ?? this.iconName,
+      incomeSourceId: incomeSourceId ?? this.incomeSourceId,
     );
   }
 }

@@ -31,6 +31,39 @@ class DashboardTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Income Sources Filter Bar
+          if (provider.incomes.isNotEmpty) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    avatar: const Icon(Icons.apps, size: 16),
+                    label: Text('Toutes (${provider.incomes.length})'),
+                    selected: provider.selectedIncomeSourceId == null,
+                    selectedColor: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    onSelected: (_) => provider.setSelectedIncomeSourceId(null),
+                  ),
+                  const SizedBox(width: 8),
+                  ...provider.incomes.map((inc) {
+                    final isSelected = provider.selectedIncomeSourceId == inc.id;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ChoiceChip(
+                        avatar: const Icon(Icons.account_balance_wallet, size: 16),
+                        label: Text('${inc.title} (${inc.amount.toStringAsFixed(0)} ${provider.currency})'),
+                        selected: isSelected,
+                        selectedColor: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                        onSelected: (_) => provider.setSelectedIncomeSourceId(inc.id),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
           // 1. Header Card (Balance, Salary & Expenses)
           const SummaryCard(),
           const SizedBox(height: 20),

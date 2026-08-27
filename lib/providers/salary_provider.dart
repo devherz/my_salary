@@ -179,6 +179,34 @@ class SalaryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Income Source Filtering State & Getters
+  String? _selectedIncomeSourceId;
+
+  String? get selectedIncomeSourceId => _selectedIncomeSourceId;
+
+  void setSelectedIncomeSourceId(String? id) {
+    _selectedIncomeSourceId = id;
+    notifyListeners();
+  }
+
+  List<Expense> get filteredExpenses {
+    final base = currentMonthExpenses;
+    if (_selectedIncomeSourceId == null) return base;
+    return base.where((e) => e.incomeSourceId == null || e.incomeSourceId == _selectedIncomeSourceId).toList();
+  }
+
+  List<SavingsGoal> get filteredSavingsGoals {
+    if (_selectedIncomeSourceId == null) return _savingsGoals;
+    return _savingsGoals.where((g) => g.incomeSourceId == null || g.incomeSourceId == _selectedIncomeSourceId).toList();
+  }
+
+  double get selectedSourceTotalIncome {
+    if (_selectedIncomeSourceId == null) return totalIncomeCurrentMonth;
+    final sourceIncomes = currentMonthIncomes.where((i) => i.id == _selectedIncomeSourceId);
+    if (sourceIncomes.isEmpty) return 0.0;
+    return sourceIncomes.fold(0.0, (sum, i) => sum + i.amount);
+  }
+
   // Month navigation
   void changeMonth(DateTime newMonth) {
     _selectedMonth = newMonth;

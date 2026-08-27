@@ -30,6 +30,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
   DateTime? _startDate = DateTime.now();
   DateTime? _targetDate;
   int _selectedColor = 0xFF10B981; // Default Emerald
+  String? _selectedIncomeSourceId;
 
   final List<int> _colors = [
     0xFF10B981, // Emerald
@@ -66,6 +67,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
       targetDate: _targetDate,
       monthlyAmount: monthly,
       colorHex: _selectedColor,
+      incomeSourceId: _selectedIncomeSourceId,
     );
 
     provider.addSavingsGoal(goal);
@@ -123,6 +125,31 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 validator: (val) => val == null || val.trim().isEmpty ? 'Veuillez entrer un titre' : null,
               ),
               const SizedBox(height: 16),
+
+              if (provider.incomes.isNotEmpty) ...[
+                DropdownButtonFormField<String?>(
+                  value: _selectedIncomeSourceId,
+                  decoration: InputDecoration(
+                    labelText: 'Source de Revenu dédiée (Optionnel)',
+                    prefixIcon: const Icon(Icons.account_balance_wallet, color: Color(0xFF10B981)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Toutes les sources (Global)'),
+                    ),
+                    ...provider.incomes.map((inc) {
+                      return DropdownMenuItem<String?>(
+                        value: inc.id,
+                        child: Text('${inc.title} (${inc.amount.toStringAsFixed(0)} ${provider.currency})'),
+                      );
+                    }),
+                  ],
+                  onChanged: (val) => setState(() => _selectedIncomeSourceId = val),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Target Total Amount
               TextFormField(
