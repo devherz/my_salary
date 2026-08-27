@@ -218,8 +218,9 @@ class DashboardTab extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
+                                  const Icon(Icons.account_balance_wallet, size: 14, color: Color(0xFF10B981)),
+                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       inc.title,
@@ -228,40 +229,49 @@ class DashboardTab extends StatelessWidget {
                                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                     ),
                                   ),
-                                  const Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF10B981)),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.arrow_forward_ios, size: 11, color: Color(0xFF10B981)),
                                 ],
                               ),
-                              Text(
-                                formatter.format(inc.amount),
-                                style: const TextStyle(
-                                  color: Color(0xFF10B981),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  formatter.format(inc.amount),
+                                  style: const TextStyle(
+                                    color: Color(0xFF10B981),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Reste: ${formatter.format(remaining)}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: remaining >= 0 ? const Color(0xFF10B981) : Colors.red,
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: remaining >= 0
+                                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                                      : Colors.red.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Reste: ${formatter.format(remaining)}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: remaining >= 0 ? const Color(0xFF10B981) : Colors.red,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Text(
-                                      'Page dédiée',
-                                      style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.open_in_new, size: 10, color: Color(0xFF10B981)),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
