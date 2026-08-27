@@ -211,49 +211,64 @@ class _GoalsTabState extends State<GoalsTab> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: color.withOpacity(0.15),
-                                    child: Icon(Icons.stars, color: color, size: 20),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        goal.title,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Row(
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: color.withValues(alpha: 0.15),
+                                      child: Icon(Icons.stars, color: color, size: 20),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          if (goal.startDate != null) ...[
-                                            const Icon(Icons.play_circle_outline, size: 12, color: Colors.blue),
-                                            const SizedBox(width: 3),
-                                            Text(
-                                              'Début : ${DateFormat('dd/MM/yy', 'fr_FR').format(goal.startDate!)}',
-                                              style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                          Text(
+                                            goal.title,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                            const SizedBox(width: 8),
-                                          ],
-                                          if (goal.targetDate != null) ...[
-                                            const Icon(Icons.event, size: 12, color: Color(0xFF10B981)),
-                                            const SizedBox(width: 3),
-                                            Text(
-                                              'Échéance : ${DateFormat('dd/MM/yy', 'fr_FR').format(goal.targetDate!)}',
-                                              style: const TextStyle(fontSize: 11, color: Colors.grey),
-                                            ),
-                                          ],
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 2,
+                                            children: [
+                                              if (goal.startDate != null)
+                                                Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.play_circle_outline, size: 12, color: Colors.blue),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      'Début : ${DateFormat('dd/MM/yy', 'fr_FR').format(goal.startDate!)}',
+                                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                                    ),
+                                                  ],
+                                                ),
+                                              if (goal.targetDate != null)
+                                                Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.event, size: 12, color: Color(0xFF10B981)),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      'Échéance : ${DateFormat('dd/MM/yy', 'fr_FR').format(goal.targetDate!)}',
+                                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ],
+                                    ),
+                                  ],
+                                ),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
