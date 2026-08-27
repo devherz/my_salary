@@ -13,6 +13,8 @@ class GoalsTab extends StatefulWidget {
 }
 
 class _GoalsTabState extends State<GoalsTab> {
+  String? _selectedIncomeSourceId;
+
   String _getRemainingDaysText(DateTime targetDate) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -90,7 +92,10 @@ class _GoalsTabState extends State<GoalsTab> {
       locale: 'fr_FR',
     );
 
-    final goals = provider.savingsGoals;
+    final allGoals = provider.savingsGoals;
+    final goals = _selectedIncomeSourceId == null
+        ? allGoals
+        : allGoals.where((g) => g.incomeSourceId == null || g.incomeSourceId == _selectedIncomeSourceId).toList();
     final totalSavedAllGoals = goals.fold(0.0, (sum, g) => sum + g.currentAmount);
 
     return Scaffold(
@@ -111,6 +116,39 @@ class _GoalsTabState extends State<GoalsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Income Sources Filter Chips Bar
+            if (provider.incomes.isNotEmpty) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ChoiceChip(
+                      avatar: const Icon(Icons.apps, size: 14),
+                      label: const Text('Tous objectifs'),
+                      selected: _selectedIncomeSourceId == null,
+                      selectedColor: const Color(0xFF10B981).withValues(alpha: 0.15),
+                      onSelected: (_) => setState(() => _selectedIncomeSourceId = null),
+                    ),
+                    const SizedBox(width: 6),
+                    ...provider.incomes.map((inc) {
+                      final isSelected = _selectedIncomeSourceId == inc.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
+                        child: ChoiceChip(
+                          avatar: const Icon(Icons.account_balance_wallet, size: 14),
+                          label: Text(inc.title),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                          onSelected: (_) => setState(() => _selectedIncomeSourceId = inc.id),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
             // Total Savings Banner Card
             Container(
               width: double.infinity,

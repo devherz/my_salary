@@ -16,6 +16,7 @@ class ExpensesTab extends StatefulWidget {
 class _ExpensesTabState extends State<ExpensesTab> {
   String _searchQuery = '';
   String _selectedFilter = 'Tous'; // Tous, Besoins, Envies, Épargne, Revenus
+  String? _selectedIncomeSourceId;
 
   final List<String> _filters = ['Tous', 'Besoins', 'Envies', 'Épargne', 'Revenus'];
 
@@ -38,6 +39,7 @@ class _ExpensesTabState extends State<ExpensesTab> {
           exp.category.toLowerCase().contains(_searchQuery.toLowerCase());
 
       if (!matchesSearch) return false;
+      if (_selectedIncomeSourceId != null && exp.incomeSourceId != _selectedIncomeSourceId) return false;
 
       if (_selectedFilter == 'Tous') return true;
       if (_selectedFilter == 'Besoins') return exp.budgetType == BudgetCategoryType.needs;
@@ -89,6 +91,37 @@ class _ExpensesTabState extends State<ExpensesTab> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                if (provider.incomes.isNotEmpty) ...[
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ChoiceChip(
+                          avatar: const Icon(Icons.apps, size: 14),
+                          label: const Text('Toutes sources'),
+                          selected: _selectedIncomeSourceId == null,
+                          selectedColor: const Color(0xFF10B981).withValues(alpha: 0.15),
+                          onSelected: (_) => setState(() => _selectedIncomeSourceId = null),
+                        ),
+                        const SizedBox(width: 6),
+                        ...provider.incomes.map((inc) {
+                          final isSelected = _selectedIncomeSourceId == inc.id;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6.0),
+                            child: ChoiceChip(
+                              avatar: const Icon(Icons.account_balance_wallet, size: 14),
+                              label: Text(inc.title),
+                              selected: isSelected,
+                              selectedColor: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                              onSelected: (_) => setState(() => _selectedIncomeSourceId = inc.id),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 // Filter Chips Row
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
