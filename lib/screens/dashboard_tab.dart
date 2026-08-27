@@ -127,15 +127,21 @@ class DashboardTab extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.account_balance_wallet, color: Color(0xFF10B981), size: 22),
-                        SizedBox(width: 8),
-                        Text(
-                          'Écrans Dédiés des Revenus',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.account_balance_wallet, color: Color(0xFF10B981), size: 22),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Écrans Dédiés des Revenus',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     TextButton.icon(
                       icon: const Icon(Icons.add, size: 16),
@@ -174,7 +180,7 @@ class DashboardTab extends StatelessWidget {
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
-                      childAspectRatio: 1.35,
+                      childAspectRatio: 1.22,
                     ),
                     itemCount: provider.incomes.length,
                     itemBuilder: (context, index) {
