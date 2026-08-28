@@ -219,6 +219,7 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
               if (_isExpense) ...[
                 if (provider.incomes.isNotEmpty) ...[
                   DropdownButtonFormField<String?>(
+                    isExpanded: true,
                     value: _selectedIncomeSourceId,
                     decoration: InputDecoration(
                       labelText: 'Source de Revenu associée (Optionnel)',
@@ -228,12 +229,16 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
                     items: [
                       const DropdownMenuItem<String?>(
                         value: null,
-                        child: Text('Toutes les sources (Global)'),
+                        child: Text('Toutes les sources (Global)', overflow: TextOverflow.ellipsis, maxLines: 1),
                       ),
                       ...provider.incomes.map((inc) {
                         return DropdownMenuItem<String?>(
                           value: inc.id,
-                          child: Text('${inc.title} (${inc.amount.toStringAsFixed(0)} ${provider.currency})'),
+                          child: Text(
+                            '[${inc.statusTag}] ${inc.title} (${inc.amount.toStringAsFixed(0)} ${provider.currency})',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         );
                       }),
                     ],
@@ -243,6 +248,7 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
                 ],
                 // Category Dropdown
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   value: _selectedCategory,
                   decoration: InputDecoration(
                     labelText: 'Catégorie',
@@ -252,7 +258,7 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
                   items: CategoryHelper.defaultCategories.map((cat) {
                     return DropdownMenuItem(
                       value: cat,
-                      child: Text(cat),
+                      child: Text(cat, overflow: TextOverflow.ellipsis, maxLines: 1),
                     );
                   }).toList(),
                   onChanged: _onCategoryChanged,

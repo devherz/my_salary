@@ -620,12 +620,13 @@ class _SettingsTabState extends State<SettingsTab> {
                   const Text('Statut de la Source :', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     value: selectedStatus,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                       prefixIcon: const Icon(Icons.star_outline, color: Color(0xFF10B981)),
                     ),
-                    items: statusOptions.map((st) => DropdownMenuItem(value: st, child: Text(st))).toList(),
+                    items: statusOptions.map((st) => DropdownMenuItem(value: st, child: Text(st, overflow: TextOverflow.ellipsis, maxLines: 1))).toList(),
                     onChanged: (val) {
                       if (val != null) {
                         setModalState(() {
@@ -665,12 +666,13 @@ class _SettingsTabState extends State<SettingsTab> {
                   const Text('Fréquence :', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     value: selectedFrequency,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                       prefixIcon: const Icon(Icons.repeat, color: Color(0xFF3B82F6)),
                     ),
-                    items: frequencyOptions.map((freq) => DropdownMenuItem(value: freq, child: Text(freq))).toList(),
+                    items: frequencyOptions.map((freq) => DropdownMenuItem(value: freq, child: Text(freq, overflow: TextOverflow.ellipsis, maxLines: 1))).toList(),
                     onChanged: (val) {
                       if (val != null) setModalState(() => selectedFrequency = val);
                     },

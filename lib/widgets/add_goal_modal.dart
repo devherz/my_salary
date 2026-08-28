@@ -5,14 +5,15 @@ import '../models/savings_goal.dart';
 import '../providers/salary_provider.dart';
 
 class AddGoalModal extends StatefulWidget {
-  const AddGoalModal({super.key});
+  final String? initialIncomeSourceId;
+  const AddGoalModal({super.key, this.initialIncomeSourceId});
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context, {String? incomeSourceId}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const AddGoalModal(),
+      builder: (_) => AddGoalModal(initialIncomeSourceId: incomeSourceId),
     );
   }
 
@@ -42,6 +43,12 @@ class _AddGoalModalState extends State<AddGoalModal> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _selectedIncomeSourceId = widget.initialIncomeSourceId;
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _targetAmountController.dispose();
@@ -58,6 +65,16 @@ class _AddGoalModalState extends State<AddGoalModal> {
     final current = double.tryParse(_currentAmountController.text.replaceAll(',', '.')) ?? 0.0;
     final monthly = double.tryParse(_monthlyAmountController.text.replaceAll(',', '.'));
 
+    // Default to primary income source if still null
+    String? finalIncomeId = _selectedIncomeSourceId;
+    if (finalIncomeId == null && provider.incomes.isNotEmpty) {
+      final primary = provider.incomes.firstWhere(
+        (i) => i.isRecurringSalary || i.statusTag == 'Principal',
+        orElse: () => provider.incomes.first,
+      );
+      finalIncomeId = primary.id;
+    }
+
     final goal = SavingsGoal(
       id: 'goal_${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
@@ -67,7 +84,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
       targetDate: _targetDate,
       monthlyAmount: monthly,
       colorHex: _selectedColor,
-      incomeSourceId: _selectedIncomeSourceId,
+      incomeSourceId: finalIncomeId,
     );
 
     provider.addSavingsGoal(goal);
@@ -77,6 +94,14 @@ class _AddGoalModalState extends State<AddGoalModal> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SalaryProvider>(context);
+
+    if (_selectedIncomeSourceId == null && provider.incomes.isNotEmpty) {
+      final primary = provider.incomes.firstWhere(
+        (i) => i.isRecurringSalary || i.statusTag == 'Principal',
+        orElse: () => provider.incomes.first,
+      );
+      _selectedIncomeSourceId = primary.id;
+    }
 
     return Container(
       padding: EdgeInsets.only(
@@ -126,27 +151,28 @@ class _AddGoalModalState extends State<AddGoalModal> {
               ),
               const SizedBox(height: 16),
 
+              // Specific Income Source Dropdown
               if (provider.incomes.isNotEmpty) ...[
-                DropdownButtonFormField<String?>(
-                  value: _selectedIncomeSourceId,
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  value: provider.incomes.any((i) => i.id == _selectedIncomeSourceId) ? _selectedIncomeSourceId : provider.incomes.first.id,
                   decoration: InputDecoration(
-                    labelText: 'Source de Revenu dédiée (Optionnel)',
+                    labelText: 'Source de Revenu Rattachée *',
                     prefixIcon: const Icon(Icons.account_balance_wallet, color: Color(0xFF10B981)),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('Toutes les sources (Global)'),
-                    ),
-                    ...provider.incomes.map((inc) {
-                      return DropdownMenuItem<String?>(
-                        value: inc.id,
-                        child: Text('${inc.title} (${inc.amount.toStringAsFixed(0)} ${provider.currency})'),
-                      );
-                    }),
-                  ],
+                  items: provider.incomes.map((inc) {
+                    return DropdownMenuItem<String>(
+                      value: inc.id,
+                      child: Text(
+                        '[${inc.statusTag}] ${inc.title} (${inc.amount.toStringAsFixed(0)} ${provider.currency})',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    );
+                  }).toList(),
                   onChanged: (val) => setState(() => _selectedIncomeSourceId = val),
+                  validator: (val) => val == null || val.isEmpty ? 'Veuillez sélectionner une source' : null,
                 ),
                 const SizedBox(height: 16),
               ],
@@ -241,22 +267,21 @@ class _AddGoalModalState extends State<AddGoalModal> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right, color: Colors.grey),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
 
-              // Target Date Picker (Optionnel)
+              // Target Date Picker
               InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
-                    initialDate: _targetDate ?? DateTime.now().add(const Duration(days: 90)),
+                    initialDate: _targetDate ?? DateTime.now().add(const Duration(days: 365)),
                     firstDate: DateTime.now(),
-                    lastDate: DateTime(2035),
-                    helpText: 'Date d\'échéance de l\'épargne',
+                    lastDate: DateTime(2040),
+                    helpText: 'Date cible d\'achèvement',
                     cancelText: 'Annuler',
                     confirmText: 'Choisir',
                   );
@@ -280,29 +305,24 @@ class _AddGoalModalState extends State<AddGoalModal> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Date d\'échéance (Optionnelle)',
+                              'Date cible (Optionnel)',
                               style: TextStyle(fontSize: 12, color: Colors.grey),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               _targetDate == null
-                                  ? 'Choisir une date cible'
+                                  ? 'Aucune date limite'
                                   : DateFormat('dd MMMM yyyy', 'fr_FR').format(_targetDate!),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: _targetDate != null ? FontWeight.bold : FontWeight.normal,
-                              ),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                       ),
                       if (_targetDate != null)
                         IconButton(
-                          icon: const Icon(Icons.close, size: 18),
+                          icon: const Icon(Icons.clear, size: 18),
                           onPressed: () => setState(() => _targetDate = null),
-                        )
-                      else
-                        const Icon(Icons.chevron_right, color: Colors.grey),
+                        ),
                     ],
                   ),
                 ),
@@ -312,19 +332,26 @@ class _AddGoalModalState extends State<AddGoalModal> {
               // Color Selector
               const Text(
                 'Couleur de l\'objectif',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: _colors.map((colorHex) {
-                  final selected = _selectedColor == colorHex;
+                children: _colors.map((c) {
+                  final isSelected = _selectedColor == c;
                   return GestureDetector(
-                    onTap: () => setState(() => _selectedColor = colorHex),
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Color(colorHex),
-                      child: selected
+                    onTap: () => setState(() => _selectedColor = c),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Color(c),
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: Theme.of(context).primaryColor, width: 3)
+                            : null,
+                      ),
+                      child: isSelected
                           ? const Icon(Icons.check, color: Colors.white, size: 20)
                           : null,
                     ),
@@ -339,13 +366,13 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(_selectedColor),
+                    backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   onPressed: _submit,
                   child: const Text(
-                    'Créer l\'objectif',
+                    'Créer l\'Objectif',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),

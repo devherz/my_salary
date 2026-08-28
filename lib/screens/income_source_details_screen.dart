@@ -438,7 +438,7 @@ class _IncomeSourceDetailsScreenState extends State<IncomeSourceDetailsScreen> w
                     ),
                     icon: const Icon(Icons.savings_outlined, size: 18),
                     label: const Text('+ Objectif', style: TextStyle(fontWeight: FontWeight.bold)),
-                    onPressed: () => AddGoalModal.show(context),
+                    onPressed: () => AddGoalModal.show(context, incomeSourceId: income.id),
                   ),
                 ),
               ],

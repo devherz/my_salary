@@ -15,6 +15,7 @@ class AnalyticsTab extends StatefulWidget {
 
 class _AnalyticsTabState extends State<AnalyticsTab> {
   int _touchedIndex = -1;
+  String? _selectedAnalyticsIncomeId;
 
   final List<Color> _chartColors = [
     const Color(0xFF3B82F6), // Blue
@@ -37,8 +38,38 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
       locale: 'fr_FR',
     );
 
-    final breakdown = provider.categoryBreakdown;
-    final totalExpenses = provider.totalExpensesCurrentMonth;
+    final selectedIncome = _selectedAnalyticsIncomeId == null
+        ? null
+        : provider.incomes.firstWhere(
+            (i) => i.id == _selectedAnalyticsIncomeId,
+            orElse: () => provider.incomes.isNotEmpty ? provider.incomes.first : Income(id: '', title: 'Source', amount: 0, date: DateTime.now()),
+          );
+
+    final filteredExpenses = _selectedAnalyticsIncomeId == null
+        ? provider.currentMonthExpenses
+        : provider.currentMonthExpenses.where((e) => e.incomeSourceId == null || e.incomeSourceId == _selectedAnalyticsIncomeId).toList();
+
+    final Map<String, double> breakdown = {};
+    for (final exp in filteredExpenses) {
+      breakdown[exp.category] = (breakdown[exp.category] ?? 0.0) + exp.amount;
+    }
+    final totalExpenses = filteredExpenses.fold<double>(0.0, (sum, e) => sum + e.amount);
+
+    final totalIncomeAmount = _selectedAnalyticsIncomeId == null
+        ? provider.totalIncomeCurrentMonth
+        : (selectedIncome?.amount ?? 0.0);
+
+    final needsRatio = _selectedAnalyticsIncomeId == null ? provider.budgetRule.needsPercent : (selectedIncome?.needsRatio ?? 50.0);
+    final wantsRatio = _selectedAnalyticsIncomeId == null ? provider.budgetRule.wantsPercent : (selectedIncome?.wantsRatio ?? 30.0);
+    final savingsRatio = _selectedAnalyticsIncomeId == null ? provider.budgetRule.savingsPercent : (selectedIncome?.savingsRatio ?? 20.0);
+
+    final needsTarget = (needsRatio / 100) * totalIncomeAmount;
+    final wantsTarget = (wantsRatio / 100) * totalIncomeAmount;
+    final savingsTarget = (savingsRatio / 100) * totalIncomeAmount;
+
+    final needsSpent = filteredExpenses.where((e) => e.budgetType == BudgetCategoryType.needs).fold<double>(0.0, (sum, e) => sum + e.amount);
+    final wantsSpent = filteredExpenses.where((e) => e.budgetType == BudgetCategoryType.wants).fold<double>(0.0, (sum, e) => sum + e.amount);
+    final savingsSpent = filteredExpenses.where((e) => e.budgetType == BudgetCategoryType.savings).fold<double>(0.0, (sum, e) => sum + e.amount);
 
     return Scaffold(
       appBar: AppBar(
@@ -53,6 +84,39 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Income Source Filter Chips
+            if (provider.incomes.isNotEmpty) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ChoiceChip(
+                      avatar: const Icon(Icons.bar_chart, size: 16),
+                      label: Text('Toutes (${provider.incomes.length})'),
+                      selected: _selectedAnalyticsIncomeId == null,
+                      selectedColor: const Color(0xFF10B981).withValues(alpha: 0.15),
+                      onSelected: (_) => setState(() => _selectedAnalyticsIncomeId = null),
+                    ),
+                    const SizedBox(width: 8),
+                    ...provider.incomes.map((inc) {
+                      final isSelected = _selectedAnalyticsIncomeId == inc.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ChoiceChip(
+                          avatar: const Icon(Icons.account_balance_wallet, size: 16),
+                          label: Text('[${inc.statusTag}] ${inc.title}'),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                          onSelected: (_) => setState(() => _selectedAnalyticsIncomeId = inc.id),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // 1. Category Pie Chart Card
             Card(
               elevation: 0.5,
@@ -62,9 +126,11 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Répartition par Catégorie',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    Text(
+                      _selectedAnalyticsIncomeId == null
+                          ? 'Répartition globale par Catégorie'
+                          : 'Répartition Catégorie: ${selectedIncome?.title}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     if (breakdown.isEmpty || totalExpenses <= 0)
@@ -72,7 +138,7 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                         height: 180,
                         child: Center(
                           child: Text(
-                            'Aucune donnée de dépense disponible pour ce mois.',
+                            'Aucune donnée de dépense disponible pour cette sélection.',
                             style: TextStyle(color: Colors.grey),
                           ),
                         ),
@@ -162,7 +228,7 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
             ),
             const SizedBox(height: 20),
 
-            // 2. Budget Rule Distribution Card (50/30/20)
+            // 2. Budget Rule Distribution Card
             Card(
               elevation: 0.5,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -171,31 +237,31 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Synthèse Règle Budgétaire',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    Text(
+                      'Synthèse Règle (${needsRatio.toInt()}/${wantsRatio.toInt()}/${savingsRatio.toInt()})',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     _AnalysisBudgetTypeRow(
                       type: BudgetCategoryType.needs,
-                      spent: provider.needsExpensesSpent,
-                      target: provider.needsBudgetAllowed,
+                      spent: needsSpent,
+                      target: needsTarget,
                       formatter: formatter,
                       color: const Color(0xFF3B82F6),
                     ),
                     const Divider(height: 24),
                     _AnalysisBudgetTypeRow(
                       type: BudgetCategoryType.wants,
-                      spent: provider.wantsExpensesSpent,
-                      target: provider.wantsBudgetAllowed,
+                      spent: wantsSpent,
+                      target: wantsTarget,
                       formatter: formatter,
                       color: const Color(0xFFF59E0B),
                     ),
                     const Divider(height: 24),
                     _AnalysisBudgetTypeRow(
                       type: BudgetCategoryType.savings,
-                      spent: provider.savingsExpensesSpent,
-                      target: provider.savingsBudgetAllowed,
+                      spent: savingsSpent,
+                      target: savingsTarget,
                       formatter: formatter,
                       color: const Color(0xFF10B981),
                     ),
