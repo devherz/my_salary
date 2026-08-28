@@ -328,6 +328,77 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text(
+                        'Saisie directe des pourcentages (%) :',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              key: ValueKey('needs_${_incomeNeedsRatio.toInt()}'),
+                              initialValue: _incomeNeedsRatio.toInt().toString(),
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Besoins %',
+                                isDense: true,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onChanged: (val) {
+                                final n = double.tryParse(val) ?? 0;
+                                setState(() {
+                                  _incomeNeedsRatio = n.clamp(0, 100);
+                                  final remain = (100 - _incomeNeedsRatio).clamp(0, 100);
+                                  _incomeWantsRatio = (remain * 0.6).roundToDouble();
+                                  _incomeSavingsRatio = 100 - _incomeNeedsRatio - _incomeWantsRatio;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              key: ValueKey('wants_${_incomeWantsRatio.toInt()}'),
+                              initialValue: _incomeWantsRatio.toInt().toString(),
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Envies %',
+                                isDense: true,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onChanged: (val) {
+                                final w = double.tryParse(val) ?? 0;
+                                setState(() {
+                                  _incomeWantsRatio = w.clamp(0, 100 - _incomeNeedsRatio);
+                                  _incomeSavingsRatio = 100 - _incomeNeedsRatio - _incomeWantsRatio;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              key: ValueKey('savings_${_incomeSavingsRatio.toInt()}'),
+                              initialValue: _incomeSavingsRatio.toInt().toString(),
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Épargne %',
+                                isDense: true,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onChanged: (val) {
+                                final s = double.tryParse(val) ?? 0;
+                                setState(() {
+                                  _incomeSavingsRatio = s.clamp(0, 100 - _incomeNeedsRatio);
+                                  _incomeWantsRatio = 100 - _incomeNeedsRatio - _incomeSavingsRatio;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
                       Text(
                         '🏠 Besoins essentiels : ${_incomeNeedsRatio.toInt()}%',
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6)),

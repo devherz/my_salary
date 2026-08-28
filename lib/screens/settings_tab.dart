@@ -725,6 +725,77 @@ class _SettingsTabState extends State<SettingsTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Text(
+                          'Saisie directe des pourcentages (%) :',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                key: ValueKey('set_needs_${needs.toInt()}'),
+                                initialValue: needs.toInt().toString(),
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Besoins %',
+                                  isDense: true,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onChanged: (val) {
+                                  final n = double.tryParse(val) ?? 0;
+                                  setModalState(() {
+                                    needs = n.clamp(0, 100);
+                                    final remain = (100 - needs).clamp(0, 100);
+                                    wants = (remain * 0.6).roundToDouble();
+                                    savings = 100 - needs - wants;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextFormField(
+                                key: ValueKey('set_wants_${wants.toInt()}'),
+                                initialValue: wants.toInt().toString(),
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Envies %',
+                                  isDense: true,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onChanged: (val) {
+                                  final w = double.tryParse(val) ?? 0;
+                                  setModalState(() {
+                                    wants = w.clamp(0, 100 - needs);
+                                    savings = 100 - needs - wants;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextFormField(
+                                key: ValueKey('set_savings_${savings.toInt()}'),
+                                initialValue: savings.toInt().toString(),
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Épargne %',
+                                  isDense: true,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onChanged: (val) {
+                                  final s = double.tryParse(val) ?? 0;
+                                  setModalState(() {
+                                    savings = s.clamp(0, 100 - needs);
+                                    wants = 100 - needs - savings;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         Text('🏠 Besoins essentiels : ${needs.toInt()}%', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6))),
                         Slider(
                           value: needs,

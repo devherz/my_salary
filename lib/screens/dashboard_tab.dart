@@ -353,7 +353,7 @@ class DashboardTab extends StatelessWidget {
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+                side: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
               ),
               child: const Padding(
                 padding: EdgeInsets.all(20.0),
@@ -407,7 +407,7 @@ class DashboardTab extends StatelessWidget {
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+                side: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
               ),
               child: const Padding(
                 padding: EdgeInsets.all(24.0),
@@ -461,9 +461,9 @@ class _QuickActionButton extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -509,9 +509,9 @@ class _GoalMiniCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
