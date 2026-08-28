@@ -92,6 +92,15 @@ class DashboardTab extends StatelessWidget {
                 final totalSpent = assignedExpenses.fold<double>(0.0, (sum, e) => sum + e.amount);
                 final remaining = inc.amount - totalSpent;
 
+                final spentRatio = inc.amount > 0 ? (totalSpent / inc.amount).clamp(0.0, 1.0) : 0.0;
+                final isPrimary = inc.statusTag == 'Principal';
+
+                final List<Color> cardGradient = isPrimary
+                    ? [const Color(0xFF10B981).withValues(alpha: 0.15), const Color(0xFF059669).withValues(alpha: 0.08)]
+                    : [const Color(0xFF3B82F6).withValues(alpha: 0.12), const Color(0xFF1D4ED8).withValues(alpha: 0.06)];
+
+                final Color accentColor = isPrimary ? const Color(0xFF10B981) : const Color(0xFF3B82F6);
+
                 return InkWell(
                   onTap: () {
                     Navigator.push(
@@ -101,24 +110,21 @@ class DashboardTab extends StatelessWidget {
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF10B981).withValues(alpha: 0.1),
-                          const Color(0xFF3B82F6).withValues(alpha: 0.1),
-                        ],
+                        colors: cardGradient,
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.25)),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1.2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 8,
+                          color: accentColor.withValues(alpha: 0.08),
+                          blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
                       ],
@@ -131,17 +137,31 @@ class DashboardTab extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981),
-                                borderRadius: BorderRadius.circular(8),
+                                color: accentColor,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: accentColor.withValues(alpha: 0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Text(
                                 inc.statusTag,
-                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
                               ),
                             ),
-                            const Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF10B981)),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: accentColor.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.arrow_forward_ios_rounded, size: 10, color: accentColor),
+                            ),
                           ],
                         ),
                         Column(
@@ -151,37 +171,58 @@ class DashboardTab extends StatelessWidget {
                               inc.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 3),
                             Text(
-                              '${inc.needsRatio.toInt()}/${inc.wantsRatio.toInt()}/${inc.savingsRatio.toInt()} • ${inc.frequency}',
-                              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                              'Règle ${inc.needsRatio.toInt()}/${inc.wantsRatio.toInt()}/${inc.savingsRatio.toInt()} • ${inc.frequency}',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey[600]),
                             ),
                           ],
                         ),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            formatter.format(inc.amount),
-                            style: const TextStyle(
-                              color: Color(0xFF10B981),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                formatter.format(inc.amount),
+                                style: TextStyle(
+                                  color: accentColor,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 17,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: spentRatio,
+                                minHeight: 4,
+                                backgroundColor: accentColor.withValues(alpha: 0.15),
+                                color: remaining >= 0 ? accentColor : Colors.red,
+                              ),
+                            ),
+                          ],
                         ),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: remaining >= 0
-                                ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                                : Colors.red.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
+                                ? accentColor.withValues(alpha: 0.12)
+                                : Colors.red.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: remaining >= 0
+                                  ? accentColor.withValues(alpha: 0.25)
+                                  : Colors.red.withValues(alpha: 0.25),
+                            ),
                           ),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
                                 child: Text(
@@ -191,11 +232,11 @@ class DashboardTab extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    color: remaining >= 0 ? const Color(0xFF10B981) : Colors.red,
+                                    color: remaining >= 0 ? accentColor : Colors.red,
                                   ),
                                 ),
                               ),
-                              const Icon(Icons.open_in_new, size: 11, color: Color(0xFF10B981)),
+                              Icon(Icons.touch_app_rounded, size: 12, color: accentColor),
                             ],
                           ),
                         ),

@@ -43,7 +43,7 @@ class SummaryCard extends StatelessWidget {
     final currency = provider.currency;
     final formatter = NumberFormat.currency(
       symbol: currency,
-      decimalDigits: 2,
+      decimalDigits: 0,
       locale: 'fr_FR',
     );
 
@@ -51,6 +51,8 @@ class SummaryCard extends StatelessWidget {
     final totalExpenses = provider.totalExpensesCurrentMonth;
     final balance = provider.remainingBalance;
     final isNegative = balance < 0;
+    final remainingRatio = totalIncome > 0 ? (balance / totalIncome).clamp(0.0, 1.0) : 0.0;
+    final remainingPercent = (remainingRatio * 100).toInt();
 
     String datePeriodTitle;
     if (provider.isCustomDateRange) {
@@ -69,65 +71,70 @@ class SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: provider.isDarkMode
-              ? [const Color(0xFF0F172A), const Color(0xFF1E293B)]
-              : [const Color(0xFF064E3B), const Color(0xFF047857)],
+              ? [const Color(0xFF0B132B), const Color(0xFF1C2541), const Color(0xFF3A506B)]
+              : [const Color(0xFF064E3B), const Color(0xFF047857), const Color(0xFF0F766E)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: const Color(0xFF047857).withValues(alpha: 0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(22.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Month & Date Range Selector Header
+            // Header Month & Control Pill
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.date_range, color: Colors.white70, size: 20),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          datePeriodTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      const Icon(Icons.calendar_today, color: Colors.white70, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        datePeriodTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (provider.isCustomDateRange)
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white70, size: 18),
-                          onPressed: () => provider.clearDateRange(),
-                          tooltip: 'Réinitialiser au mois',
+                      if (provider.isCustomDateRange) ...[
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () => provider.clearDateRange(),
+                          child: const Icon(Icons.close, color: Colors.white70, size: 14),
                         ),
+                      ],
                     ],
                   ),
                 ),
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit_calendar, color: Colors.white),
+                      icon: const Icon(Icons.edit_calendar, color: Colors.white, size: 20),
                       onPressed: () => _pickDateRange(context, provider),
-                      tooltip: 'Choisir la date début / fin',
+                      tooltip: 'Sélectionner une période',
                     ),
                     if (!provider.isCustomDateRange) ...[
                       IconButton(
-                        icon: const Icon(Icons.chevron_left, color: Colors.white),
+                        icon: const Icon(Icons.chevron_left, color: Colors.white, size: 22),
                         onPressed: () {
                           final prev = DateTime(
                             provider.selectedMonth.year,
@@ -138,7 +145,7 @@ class SummaryCard extends StatelessWidget {
                         tooltip: 'Mois précédent',
                       ),
                       IconButton(
-                        icon: const Icon(Icons.chevron_right, color: Colors.white),
+                        icon: const Icon(Icons.chevron_right, color: Colors.white, size: 22),
                         onPressed: () {
                           final next = DateTime(
                             provider.selectedMonth.year,
@@ -153,130 +160,192 @@ class SummaryCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Solde Restant',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              formatter.format(balance),
-              style: TextStyle(
-                color: isNegative ? const Color(0xFFFCA5A5) : Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Divider(color: Colors.white24, height: 1),
-            const SizedBox(height: 16),
-            // Income & Expense Breakdown Row
+            const SizedBox(height: 18),
+
+            // Balance Display
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_downward,
-                          color: Color(0xFF6EE7B7),
-                          size: 20,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'SOLDE NET DISPONIBLE',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formatter.format(balance),
+                        style: TextStyle(
+                          color: isNegative ? const Color(0xFFFCA5A5) : Colors.white,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Revenus',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                formatter.format(totalIncome),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 Container(
-                  height: 35,
-                  width: 1,
-                  color: Colors.white24,
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-                Expanded(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isNegative
+                        ? Colors.red.withValues(alpha: 0.25)
+                        : const Color(0xFF10B981).withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isNegative ? Colors.redAccent : const Color(0xFF34D399),
+                    ),
+                  ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_upward,
-                          color: Color(0xFFFCA5A5),
-                          size: 20,
-                        ),
+                      Icon(
+                        isNegative ? Icons.trending_down : Icons.trending_up,
+                        color: isNegative ? Colors.redAccent : const Color(0xFF34D399),
+                        size: 16,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Dépenses',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                formatter.format(totalExpenses),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+                      const SizedBox(width: 4),
+                      Text(
+                        isNegative ? 'Déficit' : '$remainingPercent% Libre',
+                        style: TextStyle(
+                          color: isNegative ? Colors.redAccent : const Color(0xFF34D399),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 14),
+
+            // Financial Health Bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: remainingRatio,
+                minHeight: 6,
+                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                color: isNegative ? Colors.redAccent : const Color(0xFF34D399),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Income & Expense Breakdown Box
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.25),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_downward_rounded,
+                            color: Color(0xFF6EE7B7),
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Revenus Totaux',
+                                style: TextStyle(color: Colors.white70, fontSize: 11),
+                              ),
+                              const SizedBox(height: 2),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  formatter.format(totalIncome),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    height: 32,
+                    width: 1,
+                    color: Colors.white24,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.25),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_upward_rounded,
+                            color: Color(0xFFFCA5A5),
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Dépenses Totales',
+                                style: TextStyle(color: Colors.white70, fontSize: 11),
+                              ),
+                              const SizedBox(height: 2),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  formatter.format(totalExpenses),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
