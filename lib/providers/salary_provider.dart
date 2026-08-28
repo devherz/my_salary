@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/budget_rule.dart';
+import '../models/category_budget_cap.dart';
 import '../models/expense.dart';
 import '../models/income.dart';
+import '../models/recurring_transaction.dart';
 import '../models/savings_goal.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
@@ -16,6 +18,8 @@ class SalaryProvider extends ChangeNotifier {
   List<Income> _incomes = [];
   List<Expense> _expenses = [];
   List<SavingsGoal> _savingsGoals = [];
+  List<CategoryBudgetCap> _categoryCaps = [];
+  List<RecurringTransaction> _recurringTransactions = [];
   bool _isDarkMode = false;
   DateTime _selectedMonth = DateTime.now();
   bool _isSecurityEnabled = false;
@@ -37,6 +41,8 @@ class SalaryProvider extends ChangeNotifier {
   List<Income> get incomes => _incomes;
   List<Expense> get expenses => _expenses;
   List<SavingsGoal> get savingsGoals => _savingsGoals;
+  List<CategoryBudgetCap> get categoryCaps => List.unmodifiable(_categoryCaps);
+  List<RecurringTransaction> get recurringTransactions => List.unmodifiable(_recurringTransactions);
   bool get isDarkMode => _isDarkMode;
   DateTime get selectedMonth => _selectedMonth;
   bool get isSecurityEnabled => _isSecurityEnabled;
@@ -54,6 +60,8 @@ class SalaryProvider extends ChangeNotifier {
     _incomes = storage.getIncomes();
     _expenses = storage.getExpenses();
     _savingsGoals = storage.getSavingsGoals();
+    _categoryCaps = storage.getCategoryCaps();
+    _recurringTransactions = storage.getRecurringTransactions();
     _isDarkMode = storage.isDarkMode();
     _isSecurityEnabled = storage.isSecurityEnabled();
     _securityType = storage.getSecurityType();
@@ -61,6 +69,85 @@ class SalaryProvider extends ChangeNotifier {
     _password = storage.getPassword();
     _isUnlocked = !_isSecurityEnabled;
     _isMonthlyReminderEnabled = storage.isMonthlyReminderEnabled();
+    processRecurringForCurrentMonth();
+    notifyListeners();
+  }
+
+  Future<void> addRecurringTransaction(RecurringTransaction item) async {
+    _recurringTransactions.add(item);
+    await storage.saveRecurringTransactions(_recurringTransactions);
+    processRecurringForCurrentMonth();
+    notifyListeners();
+  }
+
+  Future<void> deleteRecurringTransaction(String id) async {
+    _recurringTransactions.removeWhere((item) => item.id == id);
+    await storage.saveRecurringTransactions(_recurringTransactions);
+    notifyListeners();
+  }
+
+  Future<void> toggleRecurringTransaction(String id) async {
+    final index = _recurringTransactions.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final old = _recurringTransactions[index];
+      _recurringTransactions[index] = RecurringTransaction(
+        id: old.id,
+        title: old.title,
+        amount: old.amount,
+        category: old.category,
+        budgetType: old.budgetType,
+        dayOfMonth: old.dayOfMonth,
+        incomeSourceId: old.incomeSourceId,
+        isActive: !old.isActive,
+      );
+      await storage.saveRecurringTransactions(_recurringTransactions);
+      notifyListeners();
+    }
+  }
+
+  void processRecurringForCurrentMonth() {
+    final now = DateTime.now();
+    for (final rec in _recurringTransactions) {
+      if (!rec.isActive) continue;
+      final existingExpense = _expenses.any((e) =>
+          e.title == rec.title &&
+          e.amount == rec.amount &&
+          e.date.year == now.year &&
+          e.date.month == now.month);
+
+      if (!existingExpense) {
+        final generatedExpense = Expense(
+          id: 'rec_gen_${rec.id}_${now.year}_${now.month}',
+          title: rec.title,
+          amount: rec.amount,
+          category: rec.category,
+          budgetType: rec.budgetType,
+          date: DateTime(now.year, now.month, rec.dayOfMonth.clamp(1, 28)),
+          incomeSourceId: rec.incomeSourceId,
+          note: 'Abonnement récurrent mensuel',
+        );
+        _expenses.add(generatedExpense);
+        storage.saveExpenses(_expenses);
+      }
+    }
+  }
+
+  Future<void> setCategoryCap(String category, double limitAmount, {String? incomeSourceId}) async {
+    _categoryCaps.removeWhere((c) => c.category == category && c.incomeSourceId == incomeSourceId);
+    if (limitAmount > 0) {
+      _categoryCaps.add(CategoryBudgetCap(
+        category: category,
+        limitAmount: limitAmount,
+        incomeSourceId: incomeSourceId,
+      ));
+    }
+    await storage.saveCategoryCaps(_categoryCaps);
+    notifyListeners();
+  }
+
+  Future<void> removeCategoryCap(String category, {String? incomeSourceId}) async {
+    _categoryCaps.removeWhere((c) => c.category == category && c.incomeSourceId == incomeSourceId);
+    await storage.saveCategoryCaps(_categoryCaps);
     notifyListeners();
   }
 

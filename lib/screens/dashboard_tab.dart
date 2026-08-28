@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'forecast_screen.dart';
 import 'income_source_details_screen.dart';
 import '../models/savings_goal.dart';
 import '../providers/salary_provider.dart';
@@ -80,7 +81,7 @@ class DashboardTab extends StatelessWidget {
                   onTap: () => AddTransactionModal.show(context),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
                 child: _QuickActionButton(
                   icon: Icons.savings_outlined,
@@ -89,12 +90,26 @@ class DashboardTab extends StatelessWidget {
                   onTap: () => AddGoalModal.show(context),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.trending_up,
+                  label: 'Prévisions',
+                  color: const Color(0xFF8B5CF6),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ForecastScreen()),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: _QuickActionButton(
                   icon: Icons.bar_chart,
                   label: 'Analyses',
-                  color: const Color(0xFF8B5CF6),
+                  color: const Color(0xFFF59E0B),
                   onTap: () => onNavigateTab(3), // Navigate to Analytics Tab
                 ),
               ),

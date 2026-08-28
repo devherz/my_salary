@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/budget_rule.dart';
 import '../providers/salary_provider.dart';
+import '../screens/subscriptions_screen.dart';
 import '../widgets/add_transaction_modal.dart';
 import '../widgets/transaction_tile.dart';
 
@@ -63,6 +64,18 @@ class _ExpensesTabState extends State<ExpensesTab> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.autorenew, color: Color(0xFF10B981)),
+            tooltip: 'Abonnements & Charges Fixes',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddTransactionModal.show(context),

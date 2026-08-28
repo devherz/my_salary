@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/budget_rule.dart';
+import '../models/category_budget_cap.dart';
 import '../models/expense.dart';
 import '../models/income.dart';
+import '../models/recurring_transaction.dart';
 import '../models/savings_goal.dart';
 
 class StorageService {
@@ -18,6 +20,8 @@ class StorageService {
   static const String _keyPassword = 'app_password';
   static const String _keySecurityType = 'security_type';
   static const String _keyIsSecurityEnabled = 'is_security_enabled';
+  static const String _keyCategoryCaps = 'category_caps_list';
+  static const String _keyRecurringTransactions = 'recurring_transactions_list';
 
   final SharedPreferences prefs;
 
@@ -220,9 +224,43 @@ class StorageService {
             .toList();
         await saveSavingsGoals(list);
       }
+      if (data.containsKey('categoryCaps')) {
+        final list = (data['categoryCaps'] as List)
+            .map((item) => CategoryBudgetCap.fromJson(item as Map<String, dynamic>))
+            .toList();
+        await saveCategoryCaps(list);
+      }
       return true;
     } catch (_) {
       return false;
     }
+  }
+
+  // Category Budget Caps
+  List<CategoryBudgetCap> getCategoryCaps() {
+    final rawList = prefs.getStringList(_keyCategoryCaps);
+    if (rawList == null || rawList.isEmpty) return [];
+    return rawList
+        .map((item) => CategoryBudgetCap.fromJson(jsonDecode(item) as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveCategoryCaps(List<CategoryBudgetCap> caps) async {
+    final rawList = caps.map((item) => jsonEncode(item.toJson())).toList();
+    await prefs.setStringList(_keyCategoryCaps, rawList);
+  }
+
+  // Recurring Transactions
+  List<RecurringTransaction> getRecurringTransactions() {
+    final rawList = prefs.getStringList(_keyRecurringTransactions);
+    if (rawList == null || rawList.isEmpty) return [];
+    return rawList
+        .map((item) => RecurringTransaction.fromJson(jsonDecode(item) as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveRecurringTransactions(List<RecurringTransaction> list) async {
+    final rawList = list.map((item) => jsonEncode(item.toJson())).toList();
+    await prefs.setStringList(_keyRecurringTransactions, rawList);
   }
 }

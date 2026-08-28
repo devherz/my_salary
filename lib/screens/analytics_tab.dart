@@ -202,8 +202,231 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                 ),
               ),
             ),
+            const SizedBox(height: 24),
+
+            // 3. Category Budget Caps & Alert System
+            Card(
+              elevation: 0.5,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.all(18.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded, color: Color(0xFFF59E0B), size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'Plafonds & Alertes Budgétaires',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('+ Plafond'),
+                          onPressed: () => _showSetCapDialog(context, provider),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Définissez des limites mensuelles par catégorie avec alerte automatique à 80% et 100% :',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 16),
+                    if (provider.categoryCaps.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Aucun plafond défini. Cliquez sur + Plafond pour ajouter une limite (ex: Alimentation <= 300 €)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ),
+                      )
+                    else
+                      Column(
+                        children: provider.categoryCaps.map((cap) {
+                          final spent = breakdown[cap.category] ?? 0.0;
+                          final ratio = cap.limitAmount > 0 ? (spent / cap.limitAmount) : 0.0;
+                          final percent = (ratio * 100).toInt();
+
+                          Color statusColor = const Color(0xFF10B981);
+                          String statusText = 'Normal ($percent%)';
+                          if (ratio >= 1.0) {
+                            statusColor = Colors.red;
+                            final over = spent - cap.limitAmount;
+                            statusText = 'Dépassement +${formatter.format(over)}';
+                          } else if (ratio >= 0.8) {
+                            statusColor = const Color(0xFFF59E0B);
+                            statusText = 'Alerte ($percent%)';
+                          }
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      cap.category,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: statusColor,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            statusText,
+                                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.grey),
+                                          onPressed: () => provider.removeCategoryCap(cap.category),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Consommé: ${formatter.format(spent)}',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                    ),
+                                    Text(
+                                      'Plafond: ${formatter.format(cap.limitAmount)}',
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: LinearProgressIndicator(
+                                    value: ratio.clamp(0.0, 1.0),
+                                    color: statusColor,
+                                    backgroundColor: statusColor.withValues(alpha: 0.2),
+                                    minHeight: 8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showSetCapDialog(BuildContext context, SalaryProvider provider) {
+    final breakdown = provider.categoryBreakdown;
+    String selectedCat = breakdown.isNotEmpty ? breakdown.keys.first : 'Alimentation';
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.tune, color: Color(0xFF10B981)),
+                SizedBox(width: 10),
+                Text('Définir un Plafond'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedCat,
+                  decoration: InputDecoration(
+                    labelText: 'Catégorie',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  items: [
+                    'Alimentation',
+                    'Logement',
+                    'Transport',
+                    'Factures & Abonnements',
+                    'Santé & Bien-être',
+                    'Shopping & Vêtements',
+                    'Loisirs & Sorties',
+                    'Épargne & Projets',
+                  ].map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedCat = val);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: 'Plafond mensuel max (${provider.currency})',
+                    hintText: 'ex: 300.00',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Annuler'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  final limit = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0.0;
+                  if (limit > 0) {
+                    provider.setCategoryCap(selectedCat, limit);
+                    Navigator.pop(ctx);
+                  }
+                },
+                child: const Text('Enregistrer'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

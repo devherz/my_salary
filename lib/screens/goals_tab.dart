@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/savings_goal.dart';
 import '../providers/salary_provider.dart';
+import '../screens/savings_challenges_screen.dart';
 import '../widgets/add_goal_modal.dart';
 
 class GoalsTab extends StatefulWidget {
@@ -105,6 +106,18 @@ class _GoalsTabState extends State<GoalsTab> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.emoji_events, color: Color(0xFFF59E0B)),
+            tooltip: 'Défis d\'Épargne & Gamification',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SavingsChallengesScreen()),
+              );
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddGoalModal.show(context),

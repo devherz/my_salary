@@ -8,7 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/budget_rule.dart';
 import '../providers/salary_provider.dart';
+import '../services/csv_report_service.dart';
 import '../services/notification_service.dart';
+import '../services/pdf_report_service.dart';
 import 'password_lock_screen.dart';
 import 'pin_lock_screen.dart';
 
@@ -933,8 +935,22 @@ class _SettingsTabState extends State<SettingsTab> {
                 child: Column(
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.cloud_upload_outlined, color: Color(0xFF10B981)),
-                      title: const Text('Exporter la sauvegarde locale', style: TextStyle(fontWeight: FontWeight.bold)),
+                      leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFEF4444)),
+                      title: const Text('Imprimer / Exporter le Rapport PDF du Mois', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Générer un bilan PDF officiel avec graphiques et tableaux'),
+                      onTap: () => PdfReportService.generateAndSharePdf(provider),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.table_chart, color: Color(0xFF10B981)),
+                      title: const Text('Exporter le Mois en CSV (Excel)', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Exporter les données au format tableur CSV'),
+                      onTap: () => CsvReportService.exportAndShareCsv(provider),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.cloud_upload_outlined, color: Color(0xFF8B5CF6)),
+                      title: const Text('Exporter la sauvegarde locale (JSON)', style: TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: const Text('Générer un code de sauvegarde JSON'),
                       onTap: () => _showExportDialog(context, provider),
                     ),
