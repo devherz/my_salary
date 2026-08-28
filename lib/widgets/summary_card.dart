@@ -167,34 +167,37 @@ class SummaryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'SOLDE NET DISPONIBLE',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        formatter.format(balance),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'SOLDE NET DISPONIBLE',
                         style: TextStyle(
-                          color: isNegative ? const Color(0xFFFCA5A5) : Colors.white,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
+                          color: Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          formatter.format(balance),
+                          style: TextStyle(
+                            color: isNegative ? const Color(0xFFFCA5A5) : Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
@@ -212,14 +215,14 @@ class SummaryCard extends StatelessWidget {
                       Icon(
                         isNegative ? Icons.trending_down : Icons.trending_up,
                         color: isNegative ? Colors.redAccent : const Color(0xFF34D399),
-                        size: 16,
+                        size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         isNegative ? 'Déficit' : '$remainingPercent% Libre',
                         style: TextStyle(
                           color: isNegative ? Colors.redAccent : const Color(0xFF34D399),
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
