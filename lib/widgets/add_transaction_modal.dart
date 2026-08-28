@@ -34,6 +34,9 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
   BudgetCategoryType _selectedBudgetType = BudgetCategoryType.needs;
   DateTime _selectedDate = DateTime.now();
   String? _selectedIncomeSourceId;
+  double _incomeNeedsRatio = 50.0;
+  double _incomeWantsRatio = 30.0;
+  double _incomeSavingsRatio = 20.0;
 
   @override
   void dispose() {
@@ -93,6 +96,9 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
         date: _selectedDate,
         isRecurringSalary: false,
         note: note,
+        needsRatio: _incomeNeedsRatio,
+        wantsRatio: _incomeWantsRatio,
+        savingsRatio: _incomeSavingsRatio,
       );
       provider.addIncome(income);
     }
@@ -279,6 +285,24 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
+              ] else ...[
+                const Text(
+                  'Répartition Budgétaire Dédiée à ce Revenu :',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildPresetChip('50/30/20', 50, 30, 20),
+                      _buildPresetChip('70/20/10', 70, 20, 10),
+                      _buildPresetChip('60/20/20', 60, 20, 20),
+                      _buildPresetChip('40/40/20', 40, 40, 20),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
               ],
               // Date Row
               Row(
@@ -319,6 +343,25 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPresetChip(String label, double n, double w, double s) {
+    final isSelected = (_incomeNeedsRatio == n && _incomeWantsRatio == w && _incomeSavingsRatio == s);
+    return Padding(
+      padding: const EdgeInsets.only(right: 6.0),
+      child: ChoiceChip(
+        label: Text(label, style: const TextStyle(fontSize: 11)),
+        selected: isSelected,
+        selectedColor: const Color(0xFF10B981).withValues(alpha: 0.2),
+        onSelected: (_) {
+          setState(() {
+            _incomeNeedsRatio = n;
+            _incomeWantsRatio = w;
+            _incomeSavingsRatio = s;
+          });
+        },
       ),
     );
   }

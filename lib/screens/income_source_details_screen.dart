@@ -40,70 +40,178 @@ class _IncomeSourceDetailsScreenState extends State<IncomeSourceDetailsScreen> w
   void _showEditIncomeDialog(BuildContext context, Income income, SalaryProvider provider) {
     final titleController = TextEditingController(text: income.title);
     final amountController = TextEditingController(text: income.amount.toStringAsFixed(2));
+    double needs = income.needsRatio;
+    double wants = income.wantsRatio;
+    double savings = income.savingsRatio;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.edit, color: Color(0xFF10B981)),
-            SizedBox(width: 10),
-            Text('Modifier la Source'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                labelText: 'Nom de la source',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.edit, color: Color(0xFF10B981)),
+                SizedBox(width: 10),
+                Text('Modifier la Source'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: 'Nom de la source',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Montant (${provider.currency})',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Répartition Budgétaire Dédiée :',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildPresetChip('50/30/20', 50, 30, 20, needs, wants, savings, (n, w, s) {
+                          setDialogState(() {
+                            needs = n;
+                            wants = w;
+                            savings = s;
+                          });
+                        }),
+                        _buildPresetChip('70/20/10', 70, 20, 10, needs, wants, savings, (n, w, s) {
+                          setDialogState(() {
+                            needs = n;
+                            wants = w;
+                            savings = s;
+                          });
+                        }),
+                        _buildPresetChip('60/20/20', 60, 20, 20, needs, wants, savings, (n, w, s) {
+                          setDialogState(() {
+                            needs = n;
+                            wants = w;
+                            savings = s;
+                          });
+                        }),
+                        _buildPresetChip('40/40/20', 40, 40, 20, needs, wants, savings, (n, w, s) {
+                          setDialogState(() {
+                            needs = n;
+                            wants = w;
+                            savings = s;
+                          });
+                        }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('🏠 Besoins : ${needs.toInt()}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6))),
+                  Slider(
+                    value: needs,
+                    min: 0,
+                    max: 100,
+                    divisions: 20,
+                    activeColor: const Color(0xFF3B82F6),
+                    onChanged: (val) {
+                      setDialogState(() {
+                        needs = val;
+                        final remain = 100 - needs;
+                        wants = (remain * 0.6).roundToDouble();
+                        savings = 100 - needs - wants;
+                      });
+                    },
+                  ),
+                  Text('🎯 Envies : ${wants.toInt()}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
+                  Slider(
+                    value: wants,
+                    min: 0,
+                    max: (100 - needs) > 0 ? 100 - needs : 1,
+                    divisions: (100 - needs) > 0 ? (100 - needs).toInt() : 1,
+                    activeColor: const Color(0xFF8B5CF6),
+                    onChanged: (val) {
+                      setDialogState(() {
+                        wants = val;
+                        savings = 100 - needs - wants;
+                      });
+                    },
+                  ),
+                  Text('💰 Épargne : ${savings.toInt()}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Montant (${provider.currency})',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Annuler'),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () async {
-              final newTitle = titleController.text.trim();
-              final newAmount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? income.amount;
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () async {
+                  final newTitle = titleController.text.trim();
+                  final newAmount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? income.amount;
 
-              if (newTitle.isNotEmpty && newAmount > 0) {
-                final updated = Income(
-                  id: income.id,
-                  title: newTitle,
-                  amount: newAmount,
-                  date: income.date,
-                  isRecurringSalary: income.isRecurringSalary,
-                  note: income.note,
-                );
-                await provider.updateIncome(updated);
-                if (ctx.mounted) Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Enregistrer'),
-          ),
-        ],
+                  if (newTitle.isNotEmpty && newAmount > 0) {
+                    final updated = Income(
+                      id: income.id,
+                      title: newTitle,
+                      amount: newAmount,
+                      date: income.date,
+                      isRecurringSalary: income.isRecurringSalary,
+                      note: income.note,
+                      needsRatio: needs,
+                      wantsRatio: wants,
+                      savingsRatio: savings,
+                    );
+                    await provider.updateIncome(updated);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  }
+                },
+                child: const Text('Enregistrer'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPresetChip(
+    String label,
+    double n,
+    double w,
+    double s,
+    double curN,
+    double curW,
+    double curS,
+    Function(double, double, double) onSelect,
+  ) {
+    final isSelected = (curN == n && curW == w && curS == s);
+    return Padding(
+      padding: const EdgeInsets.only(right: 6.0),
+      child: ChoiceChip(
+        label: Text(label, style: const TextStyle(fontSize: 11)),
+        selected: isSelected,
+        selectedColor: const Color(0xFF10B981).withValues(alpha: 0.2),
+        onSelected: (_) => onSelect(n, w, s),
       ),
     );
   }
@@ -162,10 +270,10 @@ class _IncomeSourceDetailsScreenState extends State<IncomeSourceDetailsScreen> w
     final remaining = income.amount - totalSpent;
     final assignedGoals = provider.savingsGoals.where((g) => g.incomeSourceId == income.id).toList();
 
-    // 50/30/20 Allocations for this income
-    final needsBudget = (provider.budgetRule.needsPercent / 100) * income.amount;
-    final wantsBudget = (provider.budgetRule.wantsPercent / 100) * income.amount;
-    final savingsBudget = (provider.budgetRule.savingsPercent / 100) * income.amount;
+    // Specific budget rule allocations for THIS income source
+    final needsBudget = (income.needsRatio / 100) * income.amount;
+    final wantsBudget = (income.wantsRatio / 100) * income.amount;
+    final savingsBudget = (income.savingsRatio / 100) * income.amount;
 
     final needsSpent = assignedExpenses.where((e) => e.budgetType == BudgetCategoryType.needs).fold<double>(0.0, (sum, e) => sum + e.amount);
     final wantsSpent = assignedExpenses.where((e) => e.budgetType == BudgetCategoryType.wants).fold<double>(0.0, (sum, e) => sum + e.amount);
@@ -321,14 +429,14 @@ class _IncomeSourceDetailsScreenState extends State<IncomeSourceDetailsScreen> w
             ),
             const SizedBox(height: 24),
 
-            // 3. Budget Allocations (50/30/20) for THIS income
+            // 3. Budget Allocations for THIS income
             Text(
-              'Répartition Budgétaire (${provider.budgetRule.needsPercent.toInt()}/${provider.budgetRule.wantsPercent.toInt()}/${provider.budgetRule.savingsPercent.toInt()})',
+              'Répartition Budgétaire (${income.needsRatio.toInt()}/${income.wantsRatio.toInt()}/${income.savingsRatio.toInt()})',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             _BudgetItemProgress(
-              title: '🏠 Besoins (${provider.budgetRule.needsPercent.toInt()}%)',
+              title: '🏠 Besoins (${income.needsRatio.toInt()}%)',
               budget: needsBudget,
               spent: needsSpent,
               color: const Color(0xFF3B82F6),
@@ -336,7 +444,7 @@ class _IncomeSourceDetailsScreenState extends State<IncomeSourceDetailsScreen> w
             ),
             const SizedBox(height: 8),
             _BudgetItemProgress(
-              title: '🎯 Envies (${provider.budgetRule.wantsPercent.toInt()}%)',
+              title: '🎯 Envies (${income.wantsRatio.toInt()}%)',
               budget: wantsBudget,
               spent: wantsSpent,
               color: const Color(0xFF8B5CF6),
@@ -344,7 +452,7 @@ class _IncomeSourceDetailsScreenState extends State<IncomeSourceDetailsScreen> w
             ),
             const SizedBox(height: 8),
             _BudgetItemProgress(
-              title: '💰 Épargne (${provider.budgetRule.savingsPercent.toInt()}%)',
+              title: '💰 Épargne (${income.savingsRatio.toInt()}%)',
               budget: savingsBudget,
               spent: savingsSpent,
               color: const Color(0xFF10B981),
