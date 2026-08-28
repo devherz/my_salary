@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import '../models/budget_rule.dart';
 import '../models/income.dart';
 import '../providers/salary_provider.dart';
 import '../services/csv_report_service.dart';
@@ -24,7 +23,6 @@ class SettingsTab extends StatefulWidget {
 
 class _SettingsTabState extends State<SettingsTab> {
   late TextEditingController _salaryController;
-  late double _needs;
 
   final List<String> _currencies = ['€', '\$', 'FCFA', 'DH', 'CHF', '£', 'DA', 'DT'];
 
@@ -33,235 +31,12 @@ class _SettingsTabState extends State<SettingsTab> {
     super.initState();
     final provider = Provider.of<SalaryProvider>(context, listen: false);
     _salaryController = TextEditingController(text: provider.baseSalary.toStringAsFixed(0));
-    _needs = provider.budgetRule.needsPercent;
   }
 
   @override
   void dispose() {
     _salaryController.dispose();
     super.dispose();
-  }
-
-  void _saveSalary(SalaryProvider provider) {
-    final val = double.tryParse(_salaryController.text.replaceAll(',', '.')) ?? 0.0;
-    if (val > 0) {
-      provider.updateBaseSalary(val);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Salaire mensuel mis à jour !')),
-      );
-    }
-  }
-
-  void _updateRule(SalaryProvider provider, double needs, double wants, double savings) {
-    setState(() {
-      _needs = needs;
-    });
-    provider.updateBudgetRule(
-      BudgetRule(needsPercent: needs, wantsPercent: wants, savingsPercent: savings),
-    );
-  }
-
-  void _showCustomRuleModal(BuildContext context, SalaryProvider provider) {
-    double needs = provider.budgetRule.needsPercent;
-    double wants = provider.budgetRule.wantsPercent;
-    double savings = provider.budgetRule.savingsPercent;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final total = needs + wants + savings;
-            final isValid = (total - 100.0).abs() < 0.1;
-            final baseSalary = provider.baseSalary;
-            final currency = provider.currency;
-
-            return Padding(
-              padding: EdgeInsets.only(
-                top: 24.0,
-                left: 24.0,
-                right: 24.0,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24.0,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Créer ma Règle sur-mesure ⚙️',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Ajustez les pourcentages selon votre choix (Total = 100%).',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Total Indicator Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isValid ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isValid ? const Color(0xFF10B981) : Colors.red,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Total des pourcentages :',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isValid ? const Color(0xFF10B981) : Colors.red,
-                          ),
-                        ),
-                        Text(
-                          '${total.toStringAsFixed(0)} %',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isValid ? const Color(0xFF10B981) : Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Needs Slider (Besoins)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '🏠 Besoins (${needs.toStringAsFixed(0)}%)',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        '${((needs / 100) * baseSalary).toStringAsFixed(0)} $currency',
-                        style: const TextStyle(color: Color(0xFF3B82F6), fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: needs,
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    activeColor: const Color(0xFF3B82F6),
-                    label: '${needs.toStringAsFixed(0)}%',
-                    onChanged: (val) {
-                      setModalState(() {
-                        needs = val;
-                      });
-                    },
-                  ),
-
-                  // Wants Slider (Envies)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '🎯 Envies / Loisirs (${wants.toStringAsFixed(0)}%)',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        '${((wants / 100) * baseSalary).toStringAsFixed(0)} $currency',
-                        style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: wants,
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    activeColor: const Color(0xFF8B5CF6),
-                    label: '${wants.toStringAsFixed(0)}%',
-                    onChanged: (val) {
-                      setModalState(() {
-                        wants = val;
-                      });
-                    },
-                  ),
-
-                  // Savings Slider (Épargne)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '💰 Épargne & Projets (${savings.toStringAsFixed(0)}%)',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        '${((savings / 100) * baseSalary).toStringAsFixed(0)} $currency',
-                        style: const TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: savings,
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    activeColor: const Color(0xFF10B981),
-                    label: '${savings.toStringAsFixed(0)}%',
-                    onChanged: (val) {
-                      setModalState(() {
-                        savings = val;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isValid ? const Color(0xFF10B981) : Colors.grey,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: isValid
-                          ? () {
-                              _updateRule(provider, needs, wants, savings);
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Règle de budget personnalisée appliquée !')),
-                              );
-                            }
-                          : null,
-                      child: Text(
-                        isValid ? 'Enregistrer ma Règle' : 'Ajustez le total à 100%',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   void _showSecurityChoiceModal(BuildContext context) {
@@ -881,7 +656,7 @@ class _SettingsTabState extends State<SettingsTab> {
                             );
                             provider.addIncome(newIncome);
                           }
-                          Navigator.pop(ctx);
+                          if (ctx.mounted) Navigator.pop(ctx);
                         }
                       },
                       child: Text(

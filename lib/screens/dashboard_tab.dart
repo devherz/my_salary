@@ -42,9 +42,10 @@ class DashboardTab extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                '${provider.incomes.length} source${provider.incomes.length > 1 ? 's' : ''}',
-                style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.bold),
+              TextButton.icon(
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('+ Source', style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: () => AddTransactionModal.show(context, initialIsExpense: false),
               ),
             ],
           ),

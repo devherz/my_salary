@@ -175,7 +175,7 @@ class _GoalsTabState extends State<GoalsTab> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0D9488).withOpacity(0.3),
+                    color: const Color(0xFF0D9488).withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -186,7 +186,7 @@ class _GoalsTabState extends State<GoalsTab> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.savings, color: Colors.white, size: 28),
@@ -224,7 +224,7 @@ class _GoalsTabState extends State<GoalsTab> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+                  side: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
                 ),
                 child: const Padding(
                   padding: EdgeInsets.all(32.0),
@@ -252,7 +252,7 @@ class _GoalsTabState extends State<GoalsTab> {
                     margin: const EdgeInsets.only(bottom: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(color: color.withOpacity(0.2)),
+                      side: BorderSide(color: color.withValues(alpha: 0.2)),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(18.0),
@@ -391,7 +391,7 @@ class _GoalsTabState extends State<GoalsTab> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: color.withOpacity(0.15),
+                                      color: color.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -408,7 +408,7 @@ class _GoalsTabState extends State<GoalsTab> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.12),
+                                        color: Colors.blue.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(

@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/budget_rule.dart';
-import '../models/expense.dart';
 import '../models/income.dart';
-import '../models/savings_goal.dart';
 import '../providers/salary_provider.dart';
 import '../widgets/add_goal_modal.dart';
 import '../widgets/add_transaction_modal.dart';
@@ -236,10 +234,8 @@ class _IncomeSourceDetailsScreenState extends State<IncomeSourceDetailsScreen> w
             ),
             onPressed: () async {
               await provider.deleteIncome(income.id);
-              if (ctx.mounted) {
-                Navigator.pop(ctx); // Close dialog
-                Navigator.pop(context); // Return to Dashboard
-              }
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Supprimer'),
           ),

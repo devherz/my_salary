@@ -65,14 +65,14 @@ class ExpenseTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: typeColor.withOpacity(0.12),
+            color: typeColor.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -175,7 +175,7 @@ class IncomeTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
