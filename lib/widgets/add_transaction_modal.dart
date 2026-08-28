@@ -286,9 +286,25 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
                 ),
                 const SizedBox(height: 16),
               ] else ...[
-                const Text(
-                  'Répartition Budgétaire Dédiée à ce Revenu :',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Répartition Budgétaire Dédiée :',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${_incomeNeedsRatio.toInt()}/${_incomeWantsRatio.toInt()}/${_incomeSavingsRatio.toInt()}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10B981), fontSize: 12),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
@@ -299,6 +315,59 @@ class _AddTransactionModalState extends State<AddTransactionModal> {
                       _buildPresetChip('70/20/10', 70, 20, 10),
                       _buildPresetChip('60/20/20', 60, 20, 20),
                       _buildPresetChip('40/40/20', 40, 40, 20),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🏠 Besoins essentiels : ${_incomeNeedsRatio.toInt()}%',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6)),
+                      ),
+                      Slider(
+                        value: _incomeNeedsRatio,
+                        min: 0,
+                        max: 100,
+                        divisions: 100,
+                        activeColor: const Color(0xFF3B82F6),
+                        onChanged: (val) {
+                          setState(() {
+                            _incomeNeedsRatio = val;
+                            final remain = 100 - _incomeNeedsRatio;
+                            _incomeWantsRatio = (remain * 0.6).roundToDouble();
+                            _incomeSavingsRatio = 100 - _incomeNeedsRatio - _incomeWantsRatio;
+                          });
+                        },
+                      ),
+                      Text(
+                        '🎯 Envies & Loisirs : ${_incomeWantsRatio.toInt()}%',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6)),
+                      ),
+                      Slider(
+                        value: _incomeWantsRatio,
+                        min: 0,
+                        max: (100 - _incomeNeedsRatio) > 0 ? 100 - _incomeNeedsRatio : 1,
+                        divisions: (100 - _incomeNeedsRatio) > 0 ? (100 - _incomeNeedsRatio).toInt() : 1,
+                        activeColor: const Color(0xFF8B5CF6),
+                        onChanged: (val) {
+                          setState(() {
+                            _incomeWantsRatio = val;
+                            _incomeSavingsRatio = 100 - _incomeNeedsRatio - _incomeWantsRatio;
+                          });
+                        },
+                      ),
+                      Text(
+                        '💰 Épargne & Projets : ${_incomeSavingsRatio.toInt()}%',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                      ),
                     ],
                   ),
                 ),

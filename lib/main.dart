@@ -61,7 +61,7 @@ class SalaryManagerApp extends StatelessWidget {
         centerTitle: false,
         titleTextStyle: TextStyle(
           color: Color(0xFF0F172A),
-          
+
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
