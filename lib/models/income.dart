@@ -8,6 +8,8 @@ class Income {
   final double needsRatio;   // default 50.0 (%)
   final double wantsRatio;   // default 30.0 (%)
   final double savingsRatio; // default 20.0 (%)
+  final String frequency;    // 'Mensuel', 'Ponctuel', 'Hebdomadaire', 'Trimestriel', 'Annuel'
+  final String statusTag;    // 'Principal', 'Secondaire 1', 'Secondaire 2', 'Secondaire 3', 'Secondaire 4', 'Secondaire 5'
 
   Income({
     required this.id,
@@ -19,6 +21,8 @@ class Income {
     this.needsRatio = 50.0,
     this.wantsRatio = 30.0,
     this.savingsRatio = 20.0,
+    this.frequency = 'Mensuel',
+    this.statusTag = 'Principal',
   });
 
   Map<String, dynamic> toJson() => {
@@ -31,6 +35,8 @@ class Income {
         'needsRatio': needsRatio,
         'wantsRatio': wantsRatio,
         'savingsRatio': savingsRatio,
+        'frequency': frequency,
+        'statusTag': statusTag,
       };
 
   factory Income.fromJson(Map<String, dynamic> json) {
@@ -44,6 +50,8 @@ class Income {
       needsRatio: (json['needsRatio'] as num?)?.toDouble() ?? 50.0,
       wantsRatio: (json['wantsRatio'] as num?)?.toDouble() ?? 30.0,
       savingsRatio: (json['savingsRatio'] as num?)?.toDouble() ?? 20.0,
+      frequency: json['frequency'] as String? ?? 'Mensuel',
+      statusTag: json['statusTag'] as String? ?? 'Principal',
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/budget_rule.dart';
+import '../models/income.dart';
 import '../providers/salary_provider.dart';
 import '../services/csv_report_service.dart';
 import '../services/notification_service.dart';
@@ -565,6 +566,279 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
+  void _showCreateIncomeSourceModal(BuildContext context, SalaryProvider provider, {Income? editIncome}) {
+    final titleController = TextEditingController(text: editIncome?.title ?? '');
+    final amountController = TextEditingController(text: editIncome != null ? editIncome.amount.toStringAsFixed(2) : '');
+
+    String selectedStatus = editIncome?.statusTag ?? 'Principal';
+    String selectedFrequency = editIncome?.frequency ?? 'Mensuel';
+    double needs = editIncome?.needsRatio ?? 50.0;
+    double wants = editIncome?.wantsRatio ?? 30.0;
+    double savings = editIncome?.savingsRatio ?? 20.0;
+
+    final statusOptions = ['Principal', 'Secondaire 1', 'Secondaire 2', 'Secondaire 3', 'Secondaire 4', 'Secondaire 5'];
+    final frequencyOptions = ['Mensuel', 'Ponctuel', 'Hebdomadaire', 'Trimestriel', 'Annuel'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              top: 20,
+              left: 20,
+              right: 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    editIncome == null ? 'Créer une Source de Revenu' : 'Modifier la Source de Revenu',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 1. Statut Dropdown (Principal, Secondaire 1..5)
+                  const Text('Statut de la Source :', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    value: selectedStatus,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      prefixIcon: const Icon(Icons.star_outline, color: Color(0xFF10B981)),
+                    ),
+                    items: statusOptions.map((st) => DropdownMenuItem(value: st, child: Text(st))).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setModalState(() {
+                          selectedStatus = val;
+                          if (titleController.text.isEmpty || statusOptions.contains(titleController.text)) {
+                            titleController.text = val == 'Principal' ? 'Salaire Principal' : val;
+                          }
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 14),
+
+                  // 2. Nom de la Source
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: 'Nom de la Source (ex: Salaire Principal, Freelance)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // 3. Montant
+                  TextField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Montant du Revenu (${provider.currency})',
+                      hintText: 'ex: 2500.00',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // 4. Fréquence Dropdown
+                  const Text('Fréquence :', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    value: selectedFrequency,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      prefixIcon: const Icon(Icons.repeat, color: Color(0xFF3B82F6)),
+                    ),
+                    items: frequencyOptions.map((freq) => DropdownMenuItem(value: freq, child: Text(freq))).toList(),
+                    onChanged: (val) {
+                      if (val != null) setModalState(() => selectedFrequency = val);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 5. Répartition Budgétaire Sur-Mesure
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Répartition Budgétaire Dédiée :', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${needs.toInt()}/${wants.toInt()}/${savings.toInt()}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10B981), fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildRatioPresetChip('50/30/20', 50, 30, 20, needs, wants, savings, (n, w, s) {
+                          setModalState(() { needs = n; wants = w; savings = s; });
+                        }),
+                        _buildRatioPresetChip('70/20/10', 70, 20, 10, needs, wants, savings, (n, w, s) {
+                          setModalState(() { needs = n; wants = w; savings = s; });
+                        }),
+                        _buildRatioPresetChip('60/20/20', 60, 20, 20, needs, wants, savings, (n, w, s) {
+                          setModalState(() { needs = n; wants = w; savings = s; });
+                        }),
+                        _buildRatioPresetChip('40/40/20', 40, 40, 20, needs, wants, savings, (n, w, s) {
+                          setModalState(() { needs = n; wants = w; savings = s; });
+                        }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('🏠 Besoins essentiels : ${needs.toInt()}%', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6))),
+                        Slider(
+                          value: needs,
+                          min: 0,
+                          max: 100,
+                          divisions: 100,
+                          activeColor: const Color(0xFF3B82F6),
+                          onChanged: (val) {
+                            setModalState(() {
+                              needs = val;
+                              final remain = 100 - needs;
+                              wants = (remain * 0.6).roundToDouble();
+                              savings = 100 - needs - wants;
+                            });
+                          },
+                        ),
+                        Text('🎯 Envies & Loisirs : ${wants.toInt()}%', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
+                        Slider(
+                          value: wants,
+                          min: 0,
+                          max: (100 - needs) > 0 ? 100 - needs : 1,
+                          divisions: (100 - needs) > 0 ? (100 - needs).toInt() : 1,
+                          activeColor: const Color(0xFF8B5CF6),
+                          onChanged: (val) {
+                            setModalState(() {
+                              wants = val;
+                              savings = 100 - needs - wants;
+                            });
+                          },
+                        ),
+                        Text('💰 Épargne & Projets : ${savings.toInt()}%', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Submit Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: () {
+                        final title = titleController.text.trim().isNotEmpty
+                            ? titleController.text.trim()
+                            : selectedStatus;
+                        final amount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? 0.0;
+
+                        if (amount > 0) {
+                          if (editIncome != null) {
+                            final updated = Income(
+                              id: editIncome.id,
+                              title: title,
+                              amount: amount,
+                              date: editIncome.date,
+                              isRecurringSalary: selectedStatus == 'Principal',
+                              note: editIncome.note,
+                              needsRatio: needs,
+                              wantsRatio: wants,
+                              savingsRatio: savings,
+                              frequency: selectedFrequency,
+                              statusTag: selectedStatus,
+                            );
+                            provider.updateIncome(updated);
+                          } else {
+                            final newIncome = Income(
+                              id: 'inc_${DateTime.now().millisecondsSinceEpoch}',
+                              title: title,
+                              amount: amount,
+                              date: DateTime.now(),
+                              isRecurringSalary: selectedStatus == 'Principal',
+                              needsRatio: needs,
+                              wantsRatio: wants,
+                              savingsRatio: savings,
+                              frequency: selectedFrequency,
+                              statusTag: selectedStatus,
+                            );
+                            provider.addIncome(newIncome);
+                          }
+                          Navigator.pop(ctx);
+                        }
+                      },
+                      child: Text(
+                        editIncome == null ? 'Créer la source de revenu' : 'Enregistrer les modifications',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRatioPresetChip(String label, double n, double w, double s, double curN, double curW, double curS, Function(double, double, double) onSelect) {
+    final isSelected = (curN == n && curW == w && curS == s);
+    return Padding(
+      padding: const EdgeInsets.only(right: 6.0),
+      child: ChoiceChip(
+        label: Text(label, style: const TextStyle(fontSize: 11)),
+        selected: isSelected,
+        selectedColor: const Color(0xFF10B981).withValues(alpha: 0.2),
+        onSelected: (_) => onSelect(n, w, s),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SalaryProvider>(context);
@@ -582,7 +856,7 @@ class _SettingsTabState extends State<SettingsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Base Salary Setting Card
+            // 1. Income Sources & Status Management Card
             Card(
               elevation: 0.5,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -592,48 +866,116 @@ class _SettingsTabState extends State<SettingsTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withOpacity(0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.account_balance_wallet, color: Color(0xFF10B981)),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Salaire Mensuel Net',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.account_balance_wallet, color: Color(0xFF10B981)),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Sources de Revenus & Statuts',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _salaryController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: InputDecoration(
-                              labelText: 'Montant de base',
-                              suffixText: provider.currency,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Définissez vos revenus avec leur statut (Principal, Secondaire 1 à 5), montant, fréquence et répartition sur-mesure :',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 14),
+
+                    if (provider.incomes.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Aucune source de revenu configurée.\nCliquez ci-dessous pour ajouter votre premier revenu !',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ),
+                      )
+                    else
+                      Column(
+                        children: provider.incomes.map((inc) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
                             ),
-                          ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    inc.statusTag,
+                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        inc.title,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      ),
+                                      Text(
+                                        '${inc.amount.toStringAsFixed(2)} ${provider.currency} • ${inc.frequency} • (${inc.needsRatio.toInt()}/${inc.wantsRatio.toInt()}/${inc.savingsRatio.toInt()})',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF3B82F6)),
+                                  onPressed: () => _showCreateIncomeSourceModal(context, provider, editIncome: inc),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                  onPressed: () => provider.deleteIncome(inc.id),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Créer une Source de Revenu', style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                          onPressed: () => _saveSalary(provider),
-                          child: const Text('Enregistrer'),
-                        ),
-                      ],
+                        onPressed: () => _showCreateIncomeSourceModal(context, provider),
+                      ),
                     ),
                   ],
                 ),
