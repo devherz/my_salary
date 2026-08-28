@@ -195,7 +195,7 @@ class DashboardTab extends StatelessWidget {
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
-                      childAspectRatio: 1.22,
+                      childAspectRatio: 1.05,
                     ),
                     itemCount: provider.incomes.length,
                     itemBuilder: (context, index) {
@@ -233,19 +233,50 @@ class DashboardTab extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Icon(Icons.account_balance_wallet, size: 14, color: Color(0xFF10B981)),
-                                  const SizedBox(width: 6),
-                                  Expanded(
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
                                     child: Text(
-                                      inc.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      inc.statusTag,
+                                      style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios, size: 10, color: Color(0xFF10B981)),
+                                ],
+                              ),
+                              Text(
+                                inc.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '${inc.needsRatio.toInt()}/${inc.wantsRatio.toInt()}/${inc.savingsRatio.toInt()}',
+                                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6)),
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  const Icon(Icons.arrow_forward_ios, size: 11, color: Color(0xFF10B981)),
+                                  Expanded(
+                                    child: Text(
+                                      inc.frequency,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 9, color: Colors.grey[600]),
+                                    ),
+                                  ),
                                 ],
                               ),
                               FittedBox(
@@ -256,18 +287,18 @@ class DashboardTab extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Color(0xFF10B981),
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: 15,
                                   ),
                                 ),
                               ),
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: remaining >= 0
                                       ? const Color(0xFF10B981).withValues(alpha: 0.12)
                                       : Colors.red.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
@@ -283,7 +314,7 @@ class DashboardTab extends StatelessWidget {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 2),
                                     const Icon(Icons.open_in_new, size: 10, color: Color(0xFF10B981)),
                                   ],
                                 ),
