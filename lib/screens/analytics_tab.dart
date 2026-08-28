@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/budget_rule.dart';
+import '../models/income.dart';
 import '../providers/salary_provider.dart';
 
 class AnalyticsTab extends StatefulWidget {
@@ -216,15 +217,21 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.warning_amber_rounded, color: Color(0xFFF59E0B), size: 22),
-                            SizedBox(width: 8),
-                            Text(
-                              'Plafonds & Alertes Budgétaires',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                        Expanded(
+                          child: Row(
+                            children: const [
+                              Icon(Icons.warning_amber_rounded, color: Color(0xFFF59E0B), size: 22),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Plafonds (Revenu Principal)',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         TextButton.icon(
                           icon: const Icon(Icons.add, size: 16),
@@ -235,7 +242,7 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Définissez des limites mensuelles par catégorie avec alerte automatique à 80% et 100% :',
+                      'Limites mensuelles par catégorie appliquées exclusivement au Revenu Principal :',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 16),
@@ -249,7 +256,7 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                         ),
                         child: const Center(
                           child: Text(
-                            'Aucun plafond défini. Cliquez sur + Plafond pour ajouter une limite (ex: Alimentation <= 300 €)',
+                            'Aucun plafond défini pour le Revenu Principal. Cliquez sur + Plafond pour ajouter une limite (ex: Alimentation <= 300 €)',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.grey, fontSize: 12),
                           ),
@@ -258,7 +265,15 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                     else
                       Column(
                         children: provider.categoryCaps.map((cap) {
-                          final spent = breakdown[cap.category] ?? 0.0;
+                          final primaryIncome = provider.incomes.firstWhere(
+                            (i) => i.isRecurringSalary || i.statusTag == 'Principal',
+                            orElse: () => provider.incomes.isNotEmpty ? provider.incomes.first : Income(id: '', title: '', amount: 0, date: DateTime.now()),
+                          );
+
+                          final primaryExpenses = provider.currentMonthExpenses.where(
+                            (e) => e.category == cap.category && (e.incomeSourceId == null || e.incomeSourceId == primaryIncome.id),
+                          );
+                          final spent = primaryExpenses.fold<double>(0.0, (sum, e) => sum + e.amount);
                           final ratio = cap.limitAmount > 0 ? (spent / cap.limitAmount) : 0.0;
                           final percent = (ratio * 100).toInt();
 
@@ -287,9 +302,13 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      cap.category,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    Expanded(
+                                      child: Text(
+                                        cap.category,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
                                     ),
                                     Row(
                                       children: [

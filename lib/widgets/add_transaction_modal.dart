@@ -7,14 +7,15 @@ import '../models/income.dart';
 import '../providers/salary_provider.dart';
 
 class AddTransactionModal extends StatefulWidget {
-  const AddTransactionModal({super.key});
+  final bool initialIsExpense;
+  const AddTransactionModal({super.key, this.initialIsExpense = true});
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context, {bool initialIsExpense = true}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const AddTransactionModal(),
+      builder: (_) => AddTransactionModal(initialIsExpense: initialIsExpense),
     );
   }
 
@@ -24,7 +25,13 @@ class AddTransactionModal extends StatefulWidget {
 
 class _AddTransactionModalState extends State<AddTransactionModal> {
   final _formKey = GlobalKey<FormState>();
-  bool _isExpense = true;
+  late bool _isExpense;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpense = widget.initialIsExpense;
+  }
 
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
